@@ -32,7 +32,7 @@ Here's an improved version of your cybersecurity attack testing tool documentati
 ### 1️⃣ Clone the Repository  
 ```bash
 git clone https://github.com/your-repo/Packet-Attack.git
-cd Packet-Attack
+cd dos-Attack
 ```
 
 ### 2️⃣ Set Up a Virtual Environment (Optional but Recommended)  
