@@ -19,7 +19,7 @@ Follow the steps below to set up and run this tool.
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/sujallamichhane18/packet-attack-tool.git
+git clone https://github.com/sujallamichhane18/dos-attack.git
 cd packet-attack-tool
 ```
 
