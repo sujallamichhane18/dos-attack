@@ -44,6 +44,8 @@ venv\Scripts\activate     # Windows (PowerShell)
 
 ### 3️⃣ Install Dependencies  
 ```bash
+pip freeze > requirements.txt
+
 pip install -r requirements.txt
 ```
 
