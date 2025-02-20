@@ -42,8 +42,7 @@ pip install -r requirements.txt
 🚀 Usage
 Run the Script with Superuser Privileges
 bash
-Copy
-Edit
+
 sudo python3 main.py
 Select an Attack Type
 makefile
@@ -56,8 +55,7 @@ makefile
 
 Example Attack
 bash
-Copy
-Edit
+
 sudo python3 main.py
 yaml
 
