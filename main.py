@@ -57,7 +57,7 @@ def check_root():
         sys.exit(1)
 
 def server_status(target_ip):
-    """Check if the target server is up by trying to connect to port 80."""
+    """Check if the target server is up by attempting a connection on port 80."""
     try:
         socket.create_connection((target_ip, 80), timeout=2)
         print(f"{GREEN}[+] Server {target_ip} is UP!{RESET}")
@@ -142,17 +142,17 @@ def main():
             print(f"{GREEN}Exiting...{RESET}")
             sys.exit(0)
         
-        target_ip = input(f"{CYAN}Enter Target IP: {RESET}")
+        target_ip = input(f"{CYAN}Enter Target IP: {RESET}").strip()
         if choice in [1, 2]:
             try:
-                target_port = int(input(f"{CYAN}Enter Target Port: {RESET}"))
+                target_port = int(input(f"{CYAN}Enter Target Port: {RESET}").strip())
             except ValueError:
                 print(f"{RED}[ERROR] Invalid port number.{RESET}")
                 continue
         else:
             target_port = None
         try:
-            duration = int(input(f"{CYAN}Enter Duration (seconds): {RESET}"))
+            duration = int(input(f"{CYAN}Enter Duration (seconds): {RESET}").strip())
         except ValueError:
             print(f"{RED}[ERROR] Invalid duration.{RESET}")
             continue
