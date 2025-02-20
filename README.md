@@ -31,15 +31,13 @@ git clone https://github.com/your-repo/Packet-Attack.git
 cd Packet-Attack
 2️⃣ Set Up a Virtual Environment (Optional but Recommended)
 bash
-Copy
-Edit
+
 python3 -m venv venv
 source venv/bin/activate   # Linux/macOS
 venv\Scripts\activate      # Windows (PowerShell)
 3️⃣ Install Dependencies
 bash
-Copy
-Edit
+
 pip install -r requirements.txt
 🚀 Usage
 Run the Script with Superuser Privileges
@@ -49,8 +47,7 @@ Edit
 sudo python3 main.py
 Select an Attack Type
 makefile
-Copy
-Edit
+
 1: TCP SYN Flood
 2: UDP Flood
 3: Ping of Death
@@ -63,8 +60,7 @@ Copy
 Edit
 sudo python3 main.py
 yaml
-Copy
-Edit
+
 1: TCP SYN Flood
 2: UDP Flood
 3: Ping of Death
@@ -78,15 +74,13 @@ Permission Denied (Linux)
 If you get a PermissionError, run:
 
 bash
-Copy
-Edit
+
 sudo chmod +x main.py
 Script Execution Disabled (Windows)
 If PowerShell prevents activation, allow scripts:
 
 powershell
-Copy
-Edit
+
 Set-ExecutionPolicy Unrestricted -Scope Process
 ❗ Disclaimer
 🚨 This tool is strictly for security research and educational purposes.
