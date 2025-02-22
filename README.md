@@ -31,7 +31,7 @@
 
 ### 1️⃣ Clone the Repository  
 ```bash
-git clone https://github.com/your-repo/Packet-Attack.git
+git clone https://github.com/sujallamichhane18/dos-attack
 cd dos-Attack
 ```
 
