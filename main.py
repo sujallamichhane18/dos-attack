@@ -44,14 +44,14 @@ def print_hacker_banner():
     banner = f"""
 {COLORS['GREEN']}{COLORS['BOLD']}
   ______     ______     ______     ______     ______     ______     ______
- /      \   /      \   /      \   /      \   /      \   /      \   /      \
+ /      \   /      \   /      \   /      \   /      \   /      \   /      /
 /$$$$$$  | /$$$$$$  | /$$$$$$  | /$$$$$$  | /$$$$$$  | /$$$$$$  | /$$$$$$  |
-$$ |__$$ | $$ |  $$/  $$ |__$$ | $$ |__$$ | $$ |  $$/  $$ |__$$ | $$ |  $$/
-$$    $$<  $$ |      $$    $$<  $$    $$<  $$ |      $$    $$<  $$ |  $$/
-$$$$$$$  | $$ |      $$$$$$$  | $$$$$$$  | $$ |      $$$$$$$  | $$ |  $$/
-$$ |  $$ | $$ |  $$  $$ |  $$ | $$ |  $$ | $$ |  $$  $$ |  $$ | $$ |  $$/
-$$ |  $$ | $$ |  $$  $$ |  $$ | $$ |  $$ | $$ |  $$  $$ |  $$ | $$ |  $$/
-$$/   $$/  $$/   $$/  $$/   $$/  $$/   $$/  $$/   $$/  $$/   $$/  $$/   $$/
+$$ |  $$ | $$ |__$$ | $$ |  $$ | $$ |  $$ | $$ |__$$ | $$ |  $$ | $$ |__$$ |
+$$ |  $$ | $$    $$<  $$ |  $$ | $$ |  $$ | $$    $$<  $$ |  $$ | $$    $$<
+$$ |  $$ | $$$$$$$  | $$ |  $$ | $$ |  $$ | $$$$$$$  | $$ |  $$ | $$$$$$$  |
+$$ \__$$ | $$ |  $$ | $$ \__$$ | $$ \__$$ | $$ |  $$ | $$ \__$$ | $$ |  $$ |
+$$    $$/  $$ |  $$ | $$    $$/  $$    $$/  $$ |  $$ | $$    $$/  $$ |  $$ |
+ $$$$$$/   $$/   $$/   $$$$$$/    $$$$$$/   $$/   $$/   $$$$$$/   $$/   $$/ 
 {COLORS['RESET']}
 {COLORS['CYAN']}Welcome to KALI DADA's Advanced Penetration Testing Suite{COLORS['RESET']}
 """
@@ -71,6 +71,7 @@ class AdvancedFirewallEvader:
         self.active = True
         self.packet_count = 0
         self.rate_limit = 1000  # Packets per second
+        self.threads = []  # List to store threads
 
     def _generate_legitimate_traffic(self):
         """Generate realistic-looking network traffic"""
@@ -117,7 +118,9 @@ class AdvancedFirewallEvader:
                     send(pkt, verbose=0)
 
                 self.packet_count += 1
-                time.sleep(1/self.rate_limit + random.uniform(-0.001, 0.001))
+                # Calculate sleep time ensuring it's not negative
+                sleep_time = max(0, 1/self.rate_limit + random.uniform(-0.001, 0.001))
+                time.sleep(sleep_time)
 
             except Exception as e:
                 print(f"{COLORS['RED']}Error: {e}{COLORS['RESET']}")
@@ -126,11 +129,15 @@ class AdvancedFirewallEvader:
         """Multi-threaded attack execution"""
         print(f"{COLORS['YELLOW']}Initializing {EVASION_TECHNIQUES[technique]}...{COLORS['RESET']}")
         for _ in range(threads):
-            threading.Thread(target=self._send_packets, args=(technique,)).start()
+            t = threading.Thread(target=self._send_packets, args=(technique,))
+            t.start()
+            self.threads.append(t)
 
     def stop_attack(self):
-        """Graceful termination"""
+        """Graceful termination and thread join"""
         self.active = False
+        for t in self.threads:
+            t.join()
         print(f"{COLORS['CYAN']}\nAttack concluded. Total packets transmitted: {self.packet_count}{COLORS['RESET']}")
 
 def main_menu():
@@ -156,6 +163,14 @@ def authorization_check():
         print(f"{COLORS['RED']}Authorization required. Exiting...{COLORS['RESET']}")
         sys.exit(0)
 
+def validate_ip(target):
+    """Validate the target IP address"""
+    try:
+        socket.inet_aton(target)
+        return True
+    except socket.error:
+        return False
+
 if __name__ == "__main__":
     print_warning()
     print_hacker_banner()
@@ -166,6 +181,11 @@ if __name__ == "__main__":
         sys.exit(1)
 
     technique, target, port, duration = main_menu()
+
+    if not validate_ip(target):
+        print(f"{COLORS['RED']}Invalid IP address. Please enter a valid IP address.{COLORS['RESET']}")
+        sys.exit(1)
+
     evader = AdvancedFirewallEvader(target, port, duration)
 
     try:
