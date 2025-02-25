@@ -55,7 +55,7 @@ def print_warning() -> None:
         time.sleep(1)
     os.system("clear")
 
-def print_kali_dada_banner() -> None:
+def print_kali_dada_banner():
     """Display the KALI DADA banner and website info."""
     os.system("clear")
     banner = f"""
@@ -68,12 +68,12 @@ def print_kali_dada_banner() -> None:
 | $$\  $$ | $$  | $$| $$        | $$        | $$  | $$| $$  | $$| $$  | $$| $$  | $$
 | $$ \  $$| $$  | $$| $$$$$$$$ /$$$$$$      | $$$$$$$/| $$  | $$| $$$$$$$/| $$  | $$
 |__/  \__/|__/  |__/|________/|______/      |_______/ |__/  |__/|_______/ |__/  |__/
-               {color_text('Welcome to KALI DADA's Cyber Attack Simulation Tool', 'CYAN')}
+               {CYAN}Welcome to KALI DADA's Cyber Attack Simulation Tool{RESET}
 """
     print(banner)
-    print(f"{color_text('Created by: ', 'YELLOW')}{NAME}{COLORS['RESET']}")
-    print(f"{color_text('Website: ', 'CYAN')}sujallamichhane.com.np{COLORS['RESET']}")
-    print(f"{color_text('[INFO] Visit: ', 'CYAN')}sujallamichhane.com.np for more cybersecurity insights!{COLORS['RESET']}\n")
+    print(f"{YELLOW}Created by: {NAME}{RESET}")
+    print(f"{CYAN}Website: sujallamichhane.com.np{RESET}")
+    print(f"{CYAN}[INFO] Visit: sujallamichhane.com.np for more cybersecurity insights!{RESET}\n")
     time.sleep(1)
 
 def validate_ip(ip: str) -> bool:
