@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 ===========================================================================
-  KALI DADA — Advanced Cyber Attack Simulation Tool
+  DOS  Advanced Cyber Attack  Tool
 ===========================================================================
   Author  : Sujal Lamichhane
   Website : sujallamichhane.com.np
@@ -12,7 +12,7 @@
   AUTHORISATION is a criminal offence under:
     • Computer Fraud and Abuse Act (CFAA) — USA
     • Computer Misuse Act — UK
-    • IT Act 2000 — Nepal / India
+    • IT Act 2000/2063 — Nepal / India
     • And equivalent laws worldwide.
   The author bears ZERO responsibility for any misuse.
 ===========================================================================
