@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 ===========================================================================
-  KALI DADA — Advanced Cyber Attack Simulation Tool
+  Advanced Cyber Attack Tool
 ===========================================================================
   Author  : Sujal Lamichhane
   Website : sujallamichhane.com.np
@@ -12,7 +12,7 @@
   AUTHORISATION is a criminal offence under:
     • Computer Fraud and Abuse Act (CFAA) — USA
     • Computer Misuse Act — UK
-    • IT Act 2000 — Nepal / India
+    • IT Act 2063 — Nepal
     • And equivalent laws worldwide.
   The author bears ZERO responsibility for any misuse.
 ===========================================================================
@@ -91,10 +91,10 @@ def print_warning():
     print(f"""
 {C.RED}{C.BOLD}
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║                      ⚠   L E G A L   W A R N I N G   ⚠                    ║
+║                      ⚠   L E G A L   W A R N I N G   ⚠                      ║
 ╠══════════════════════════════════════════════════════════════════════════════╣
 ║                                                                              ║
-║  THIS TOOL IS FOR EDUCATIONAL AND AUTHORISED LAB USE ONLY.                  ║
+║  THIS TOOL IS FOR EDUCATIONAL AND AUTHORISED LAB USE ONLY.                   ║
 ║                                                                              ║
 ║  • Do NOT use this against any system you do not own or have written         ║
 ║    permission to test.                                                       ║
@@ -112,7 +112,7 @@ def print_banner():
     print(f"""{C.GREEN}{C.BOLD}
  /$$   /$$  /$$$$$$  /$$       /$$$$$$        /$$$$$$$   /$$$$$$  /$$$$$$$   /$$$$$$
 | $$  /$$/ /$$__  $$| $$      |_  $$_/       | $$__  $$ /$$__  $$| $$__  $$ /$$__  $$
-| $$ /$$/ | $$  \\$$| $$        | $$         | $$  \\ $$| $$  \\ $$| $$  \\ $$| $$  \\ $$
+| $$ /$$/ | $$  \\$$| $$        | $$         | $$  \\ $$| $$  \\ $$| $$  \\ $$| $$ \\$$
 | $$$$$/  | $$$$$$$$| $$        | $$         | $$  | $$| $$$$$$$$| $$  | $$| $$$$$$$$
 | $$  $$  | $$__  $$| $$        | $$         | $$  | $$| $$__  $$| $$  | $$| $$__  $$
 | $$\\ $$  | $$  | $$| $$        | $$         | $$  | $$| $$  | $$| $$  | $$| $$  | $$
