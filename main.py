@@ -21,8 +21,7 @@
     1. Advanced TCP SYN Flood   — Spoofed IPs, fragmented packets, multi-thread
     2. Advanced UDP Flood       — Variable-size payload, multi-thread
     3. ICMP Ping Flood          — ICMP echo request storm, multi-thread
-    4. Amplification Simulation — Educational only (no real traffic sent)
-    5. HTTP GET Flood           — Layer-7 application-layer flood
+    4. HTTP GET Flood           — Layer-7 application-layer flood
 
   Requires: Python 3.8+, Scapy, root / sudo
   Install : pip3 install scapy
@@ -530,78 +529,7 @@ def icmp_ping_flood(target_ip: str, duration: int, num_threads: int):
 
 
 # ═══════════════════════════════════════════════════════════
-#  ATTACK MODULE 4 — AMPLIFICATION ATTACK (SIMULATION)
-# ═══════════════════════════════════════════════════════════
-
-def amplification_simulation(target_ip: str, amp_factor: int, duration: int):
-    """
-    EDUCATIONAL SIMULATION ONLY — no real traffic is sent.
-
-    Explains how UDP amplification (DNS/NTP/SSDP reflection) works:
-      1. Attacker sends a small request to an open resolver/service,
-         SPOOFING the source IP as the victim's IP.
-      2. The reflector sends a large response to the victim.
-      3. Amplification factor = response_bytes / request_bytes.
-         DNS: up to 50×   NTP: up to 556×   SSDP: up to 30×
-
-    Why not simulate it for real?
-      Sending spoofed packets to public DNS/NTP servers is illegal
-      even in a lab unless those servers are also part of your
-      controlled environment.
-
-    This function only prints an educational walk-through.
-    """
-    section("AMPLIFICATION ATTACK — SIMULATION")
-    log("WARN",  "NO real traffic is sent. This module is educational only.")
-    log("INFO",  f"Target (simulated victim): {target_ip}")
-    log("INFO",  f"Amplification factor     : {amp_factor}×")
-    log("INFO",  f"Simulation duration      : {duration}s")
-
-    print(f"""
-  {C.CYAN}  How UDP Amplification Works:{C.RESET}
-  {C.DIM}  ─────────────────────────────────────────────────────────────────{C.RESET}
-
-  {C.WHITE}  [Attacker] ──(spoofed src={target_ip})──► [Open DNS/NTP Resolver]
-                                                        │
-              {target_ip} ◄──── LARGE response ({amp_factor}× bigger) ────┘
-  {C.DIM}
-  {C.WHITE}  Attack Volume = (attacker bandwidth) × (amplification factor)
-  {C.WHITE}  Example: 1 Gbps attacker → {amp_factor} Gbps flood on victim{C.RESET}
-
-  {C.CYAN}  Real-World Examples:{C.RESET}
-  {C.WHITE}    • DNS reflection  — up to  54× amplification
-    • NTP monlist     — up to 556× amplification
-    • SSDP            — up to  30× amplification
-    • Memcached       — up to 51200× amplification (2018 GitHub attack){C.RESET}
-
-  {C.CYAN}  Defences:{C.RESET}
-  {C.WHITE}    • BCP38 anti-spoofing ingress filtering at ISP level
-    • Disable open resolvers / restrict monlist (NTP)
-    • Rate-limit ICMP/UDP responses at network edge
-    • Use RTBH (Remotely Triggered Black Hole) routing{C.RESET}
-  {C.DIM}  ─────────────────────────────────────────────────────────────────{C.RESET}
-""")
-
-    # Simulate a count-up for visual effect
-    log("INFO", f"Simulating {amp_factor * 1000:,} amplified packets over {duration}s...")
-    start = time.time()
-    simulated = 0
-    end_time = start + duration
-
-    while time.time() < end_time:
-        batch = random.randint(100, 500)
-        simulated += batch
-        elapsed = time.time() - start
-        progress_line(simulated, simulated, 0, elapsed, simulated / elapsed if elapsed > 0 else 0)
-        time.sleep(0.2)
-
-    print(f"\n\n  {C.GREEN}{C.BOLD}[SIMULATION COMPLETE]{C.RESET}")
-    log("OK", f"Would have sent ~{simulated:,} amplified packets in {duration}s if this were real.")
-    log("WARN", "Remember: actual amplification attacks against real targets are ILLEGAL.")
-
-
-# ═══════════════════════════════════════════════════════════
-#  ATTACK MODULE 5 — HTTP GET FLOOD (Layer 7)
+#  ATTACK MODULE 4 — HTTP GET FLOOD (Layer 7)
 # ═══════════════════════════════════════════════════════════
 
 def _http_flood_worker(target_ip: str, target_port: int, end_time: float):
@@ -697,12 +625,11 @@ def http_get_flood(target_ip: str, target_port: int, duration: int, num_threads:
 # ═══════════════════════════════════════════════════════════
 
 MENU = {
-    "1": ("Advanced TCP SYN Flood",          "Layer 3/4 — Fills half-open connection table (Scapy, requires root)"),
-    "2": ("Advanced UDP Flood",               "Layer 3/4 — High-volume UDP datagrams with optional spoofing"),
-    "3": ("ICMP Ping Flood",                  "Layer 3   — ICMP Echo Request storm with spoofed IPs (Scapy)"),
-    "4": ("Amplification Attack (Simulation)","Educational — Shows how reflection/amplification works, NO real traffic"),
-    "5": ("HTTP GET Flood",                   "Layer 7   — Application-layer flood with randomised requests"),
-    "6": ("Exit",                             "Quit the tool"),
+    "1": ("Advanced TCP SYN Flood", "Layer 3/4 — Fills half-open connection table (Scapy, requires root)"),
+    "2": ("Advanced UDP Flood",     "Layer 3/4 — High-volume UDP datagrams with optional spoofing"),
+    "3": ("ICMP Ping Flood",        "Layer 3   — ICMP Echo Request storm with spoofed IPs (Scapy)"),
+    "4": ("HTTP GET Flood",         "Layer 7   — Application-layer flood with randomised requests"),
+    "5": ("Exit",                   "Quit the tool"),
 }
 
 
@@ -710,7 +637,7 @@ def print_menu():
     """Display the attack selection menu."""
     print(f"\n{C.BOLD}{C.WHITE}  ┌─ Attack Selection Menu {'─'*48}┐{C.RESET}")
     for key, (name, desc) in MENU.items():
-        if key == "6":
+        if key == "5":
             print(f"  {C.DIM}  {'─'*60}{C.RESET}")
             print(f"  {C.YELLOW}  [{key}] {name}{C.RESET}")
         else:
@@ -750,7 +677,7 @@ def run_menu():
             log("ERROR", "Invalid choice. Please enter a number from the menu.")
             continue
 
-        if choice == "6":
+        if choice == "5":
             log("INFO", "Goodbye!")
             sys.exit(0)
 
@@ -783,12 +710,7 @@ def run_menu():
             server_status(target_ip, 80)
             icmp_ping_flood(target_ip, duration, threads)
 
-        elif choice == "4": # Amplification simulation
-            duration   = get_int("Simulation duration (seconds) [default 10]: ", default=10, min_val=1, max_val=120)
-            amp_factor = get_int("Amplification factor [default 50]: ",           default=50, min_val=1, max_val=1000)
-            amplification_simulation(target_ip, amp_factor, duration)
-
-        elif choice == "5": # HTTP GET Flood
+        elif choice == "4": # HTTP GET Flood
             port     = get_int("Target port [default 80]: ",        default=80, min_val=1, max_val=65535)
             duration = get_int("Duration (seconds) [default 30]: ", default=30, min_val=1, max_val=3600)
             threads  = get_int("Number of threads [default 20]: ",  default=20, min_val=1, max_val=1000)
