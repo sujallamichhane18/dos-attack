@@ -1,8 +1,8 @@
-# Kali Dada — Advanced Cyber Attack Simulation Tool
+# DOS — Advanced Cyber Attack Tool
 
 > **Author:** Sujal Lamichhane  
 > **Website:** [sujallamichhane.com.np](https://sujallamichhane.com.np)  
-> **Purpose:** Controlled Lab / Educational Demonstration
+> **Purpose:** Controlled Lab
 
 ---
 
@@ -21,38 +21,125 @@ The author bears **zero responsibility** for any misuse.
 
 ---
 
-## Overview
-
-Kali Dada is a Python-based network stress-testing and DDoS simulation tool designed to help security researchers, students, and penetration testers understand how volumetric and application-layer attacks work — and how to defend against them.
-
-It includes five attack modules, each with detailed educational commentary explaining the underlying technique, how defences work, and real-world context.
-
----
-
 ## Requirements
 
 | Requirement | Details |
 |---|---|
 | Python | 3.8 or higher |
-| Scapy | Required for SYN Flood, ICMP Flood, spoofed UDP |
-| Root / sudo | Required for raw socket operations |
-| OS | Linux recommended (Kali Linux ideal) |
+| pip | Comes with Python 3.8+ |
+| Scapy | Installed inside the venv |
+| OS | Linux / Kali Linux (recommended) |
+| Privileges | Must run as `root` / `sudo` |
 
-### Install dependencies
+---
+
+## Setup & Installation
+
+### Step 1 — Clone or download the script
 
 ```bash
-pip3 install scapy
+git clone https://github.com/yourusername/kali-dada.git
+cd kali-dada
+```
+
+Or if you downloaded it manually:
+
+```bash
+cd /path/to/kali_dada
+```
+
+---
+
+### Step 2 — Create a virtual environment
+
+```bash
+python3 -m venv venv
+```
+
+This creates a `venv/` folder in the current directory containing an isolated Python environment.
+
+---
+
+### Step 3 — Activate the virtual environment
+
+```bash
+source venv/bin/activate
+```
+
+Your terminal prompt will change to show `(venv)` — confirming the environment is active.
+
+To deactivate later when you are done:
+
+```bash
+deactivate
+```
+
+---
+
+### Step 4 — Install dependencies
+
+```bash
+pip install scapy
+```
+
+---
+
+### Step 5 — Run the tool
+
+Scapy requires raw socket access, so the script must be run as root. Use the **full path** to the venv Python binary so root uses the venv's packages:
+
+```bash
+sudo venv/bin/python kali_dada.py
+```
+
+> **Why `venv/bin/python` and not just `sudo python3`?**  
+> `sudo` resets the `PATH` and uses the system Python, which does not have your venv's Scapy installed. Using the full path forces root to use the correct interpreter.
+
+---
+
+## Quick Start (all steps in one block)
+
+```bash
+# 1. Enter the project directory
+cd /path/to/kali-dada
+
+# 2. Create the virtual environment
+python3 -m venv venv
+
+# 3. Activate it
+source venv/bin/activate
+
+# 4. Install Scapy
+pip install scapy
+
+# 5. Run as root using the venv interpreter
+sudo venv/bin/python kali_dada.py
 ```
 
 ---
 
 ## Usage
 
-```bash
-sudo python3 kali_dada.py
+On launch you will see a legal warning, then be prompted to confirm:
+
+```
+Type 'I AGREE' to continue:
 ```
 
-You will be shown a legal warning and asked to type `I AGREE` before proceeding. The tool then presents an interactive menu.
+Type `I AGREE` (any capitalisation accepted — `i agree`, `I Agree`, etc.) and press Enter.
+You will then see the main menu:
+
+```
+  [1] Advanced TCP SYN Flood
+  [2] Advanced UDP Flood
+  [3] ICMP Ping Flood
+  [4] HTTP GET Flood
+  ──────────────────
+  [5] Exit
+```
+
+Select an option, enter a target IP, then follow the prompts for port, duration, and thread count.
+Each field shows a default value in brackets — press Enter to accept it.
 
 ---
 
@@ -60,106 +147,107 @@ You will be shown a legal warning and asked to type `I AGREE` before proceeding.
 
 ### 1. Advanced TCP SYN Flood *(Layer 3/4)*
 
-Sends a high volume of TCP SYN packets with **spoofed source IPs** and **fragmented packets**, filling the target's half-open connection table and denying service to legitimate clients.
+Sends high-volume TCP SYN packets with spoofed source IPs and fragmented packets to fill the
+target's half-open connection table, preventing legitimate connections.
 
-| Detail | Value |
+| | |
 |---|---|
-| Technique | IP spoofing + TCP fragmentation |
-| Requires | Scapy, root |
-| Primary Defence | SYN cookies (RFC 4987), SYN rate limiting, stateful firewall |
+| Requires | Scapy + root |
+| Default port | 80 |
+| Default threads | 5 |
+| Primary defence | SYN cookies (RFC 4987), stateful firewall |
 
 ---
 
 ### 2. Advanced UDP Flood *(Layer 3/4)*
 
-Sends random-length UDP datagrams (64–1500 bytes) to overwhelm the target's UDP processing stack. Supports two modes:
+Sends random-length (64–1500 byte) UDP datagrams. Two modes available:
+- **Spoofed mode** — uses Scapy with forged source IPs (requires root)
+- **Socket mode** — uses OS UDP socket for maximum raw throughput
 
-- **Scapy mode** — spoofed source IPs, requires root
-- **Socket mode** — faster, no spoofing, uses OS UDP socket
-
-| Detail | Value |
+| | |
 |---|---|
-| Technique | Random-size UDP datagrams, optional IP spoofing |
-| Requires | Root (for Scapy/spoofed mode) |
-| Primary Defence | Ingress rate limiting, BCP38 anti-spoofing, upstream scrubbing |
+| Requires | Root for spoofed mode only |
+| Default port | 53 |
+| Default threads | 5 |
+| Primary defence | BCP38 anti-spoofing, ingress rate limiting |
 
 ---
 
 ### 3. ICMP Ping Flood *(Layer 3)*
 
-Sends a storm of ICMP Echo Request (ping) packets with **spoofed source IPs** and **random payloads**, consuming the target's bandwidth and ICMP processing capacity.
+Storms the target with ICMP Echo Requests using randomised payloads and spoofed source IPs,
+overwhelming ICMP processing and consuming bandwidth.
 
-| Detail | Value |
+| | |
 |---|---|
-| Technique | High-rate ICMP Echo Requests with spoofed IPs |
-| Requires | Scapy, root |
-| Primary Defence | ICMP rate limiting, perimeter firewall rules |
+| Requires | Scapy + root |
+| Default threads | 5 |
+| Primary defence | ICMP rate limiting, perimeter firewall rules |
 
 ---
 
-### 4. Amplification Attack *(Simulation Only)*
+### 4. HTTP GET Flood *(Layer 7)*
 
-**No real traffic is sent.** This module is a pure educational walk-through explaining how UDP reflection/amplification attacks (DNS, NTP, SSDP, Memcached) work and why they are so effective.
+Fires rapid HTTP GET requests with randomised paths and rotating User-Agent strings,
+mimicking legitimate browser traffic to bypass L3/L4 filters.
 
-| Protocol | Max Amplification Factor |
+| | |
 |---|---|
-| DNS reflection | ~54× |
-| NTP monlist | ~556× |
-| SSDP | ~30× |
-| Memcached | ~51,200× |
-
-Primary defences covered: BCP38 ingress filtering, disabling open resolvers, RTBH routing.
+| Requires | Standard sockets — no root needed |
+| Default port | 80 |
+| Default threads | 20 |
+| Primary defence | WAF, CAPTCHA, JS challenge, Cloudflare Bot Fight Mode |
 
 ---
 
-### 5. HTTP GET Flood *(Layer 7)*
+## Live Stats
 
-Sends rapid HTTP GET requests with **randomised paths** and **rotating User-Agent strings** to bypass simple signature-based filters. Operates at the application layer, making it harder to distinguish from legitimate browser traffic at L3/L4.
-
-| Detail | Value |
-|---|---|
-| Technique | Randomised GET requests mimicking browser traffic |
-| Requires | Standard sockets only (no root needed) |
-| Primary Defence | WAF, CAPTCHA, JS challenge, rate limiting, Cloudflare Bot Fight Mode |
-
----
-
-## Live Statistics
-
-During any active attack, the tool displays a live progress line:
+During any active attack a live counter updates in place every 0.3 seconds:
 
 ```
-Sent:   12,450   OK:  12,301   Err:   149   PPS:   415.3   Time:   30.0s
+Sent:   18,432   OK:  18,301   Err:    131   PPS:   1,245.7   Time:   14.8s
 ```
 
-A full summary is printed after each run showing total packets sent, successes, errors, duration, and average packets per second.
+A full summary is printed after each run showing total sent, successes, errors, duration, and
+average packets per second.
 
 ---
 
-## Signal Handling
+## Stopping an Attack
 
-Press `Ctrl+C` at any time to **gracefully stop the current attack** and return to the menu. The tool will not exit — you can launch a new attack or choose to quit from the menu.
+Press `Ctrl+C` at any time to gracefully stop the current attack and return to the menu.
+The tool will **not** exit — you can start a new attack or choose option **5** to quit.
+
+---
+
+## Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| `Operation not permitted` | Run with `sudo venv/bin/python kali_dada.py` |
+| `Scapy not found` | Activate the venv first, then `pip install scapy` |
+| `sudo: venv/bin/python: command not found` | Use the absolute path: `sudo /full/path/to/venv/bin/python kali_dada.py` |
+| SYN / ICMP flood shows 0 packets | Verify Scapy: `venv/bin/python -c "import scapy; print('OK')"` |
+| Very low PPS on UDP / SYN | Increase thread count; ensure no firewall is blocking outbound raw sockets |
 
 ---
 
 ## Project Structure
 
 ```
-kali_dada.py          # Main script — all modules in a single file
+kali-dada/
+├── kali_dada.py      # Main script — all modules in a single file
+├── venv/             # Virtual environment (created by you, not committed to git)
+└── README.md         # This file
 ```
 
 ---
 
 ## Ethical Use
 
-This tool was built to demonstrate real-world attack techniques in a way that helps defenders understand what they are protecting against. Always:
+Always:
 
-- Use only on systems **you own** or have **written permission** to test
-- Operate in an **isolated lab environment**
+- Use **only** on systems you own or have **explicit written permission** to test
+- Operate in an **isolated lab or VM environment**
 - Never target production systems, public infrastructure, or third-party services
-
----
-
-## License
-
-This project is for educational use only. All rights reserved by the author. Redistribution or use in a malicious context is strictly prohibited.
