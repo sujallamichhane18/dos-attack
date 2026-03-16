@@ -1,111 +1,165 @@
+# Kali Dada — Advanced Cyber Attack Simulation Tool
 
-
----
-
-# 🛡️ Cybersecurity Attack Testing Tool
-
-## ⚠️ WARNING  
-🚨 **THIS TOOL IS FOR EDUCATIONAL AND TESTING PURPOSES ONLY.** 🚨  
-**THE AUTHOR IS NOT RESPONSIBLE FOR ANY MISUSE OR DAMAGE CAUSED BY THIS TOOL.**  
-**USING THIS TOOL ON UNAUTHORIZED SYSTEMS MAY VIOLATE LAWS.**
+> **Author:** Sujal Lamichhane  
+> **Website:** [sujallamichhane.com.np](https://sujallamichhane.com.np)  
+> **Purpose:** Controlled Lab / Educational Demonstration
 
 ---
 
-## 🔥 Created by  
-👤 **Sujal Lamichhane**  
-🛡️ **Cyber Security Enthusiast**  
-🌐 **Website:** [sujallamichhane.com.np](https://sujallamichhane.com.np)
+## ⚠ Legal Disclaimer
+
+**This tool is strictly for EDUCATIONAL and CONTROLLED LAB environments only.**
+
+Running any of these attacks against a system without **explicit written authorisation** is a criminal offence under:
+
+- Computer Fraud and Abuse Act (CFAA) — USA
+- Computer Misuse Act — UK
+- IT Act 2000 — Nepal / India
+- Equivalent laws worldwide
+
+The author bears **zero responsibility** for any misuse.
 
 ---
 
-## 📌 Features  
-- **SYN Flood Attack**: TCP-based DoS (Denial of Service) attack to overwhelm a target.
-- **UDP Flood Attack**: Flooding the target with UDP packets, causing service disruption.
-- **Ping of Death**: Sending oversized ICMP packets to crash the target.
-- **Packet Tracking**: Real-time statistics on the total packets sent, packet loss, and server status.
-- **Hacker-Themed Interface**: Terminal-styled for a fun, hacker-like experience.
+## Overview
+
+Kali Dada is a Python-based network stress-testing and DDoS simulation tool designed to help security researchers, students, and penetration testers understand how volumetric and application-layer attacks work — and how to defend against them.
+
+It includes five attack modules, each with detailed educational commentary explaining the underlying technique, how defences work, and real-world context.
 
 ---
 
-## 🔧 Installation  
+## Requirements
 
-### 1️⃣ Clone the Repository  
+| Requirement | Details |
+|---|---|
+| Python | 3.8 or higher |
+| Scapy | Required for SYN Flood, ICMP Flood, spoofed UDP |
+| Root / sudo | Required for raw socket operations |
+| OS | Linux recommended (Kali Linux ideal) |
+
+### Install dependencies
+
 ```bash
-git clone https://github.com/sujallamichhane18/dos-attack
-cd dos-Attack
-```
-
-### 2️⃣ Set Up a Virtual Environment (Optional but Recommended)  
-```bash
-python3 -m venv venv
-source venv/bin/activate  # Linux/macOS
-venv\Scripts\activate     # Windows (PowerShell)
-```
-
-### 3️⃣ Install Dependencies  
-```bash
-pip freeze > requirements.txt
-
-pip install -r requirements.txt
+pip3 install scapy
 ```
 
 ---
 
-## 🚀 Usage
+## Usage
 
-### 1️⃣ Run the Script with Superuser Privileges  
 ```bash
-sudo python3 main.py
+sudo python3 kali_dada.py
 ```
 
-### 2️⃣ Select an Attack Type  
-Choose the attack type from the following options:
-```bash
-1: TCP SYN Flood
-2: UDP Flood
-3: Ping of Death
-4: Exit
+You will be shown a legal warning and asked to type `I AGREE` before proceeding. The tool then presents an interactive menu.
+
+---
+
+## Attack Modules
+
+### 1. Advanced TCP SYN Flood *(Layer 3/4)*
+
+Sends a high volume of TCP SYN packets with **spoofed source IPs** and **fragmented packets**, filling the target's half-open connection table and denying service to legitimate clients.
+
+| Detail | Value |
+|---|---|
+| Technique | IP spoofing + TCP fragmentation |
+| Requires | Scapy, root |
+| Primary Defence | SYN cookies (RFC 4987), SYN rate limiting, stateful firewall |
+
+---
+
+### 2. Advanced UDP Flood *(Layer 3/4)*
+
+Sends random-length UDP datagrams (64–1500 bytes) to overwhelm the target's UDP processing stack. Supports two modes:
+
+- **Scapy mode** — spoofed source IPs, requires root
+- **Socket mode** — faster, no spoofing, uses OS UDP socket
+
+| Detail | Value |
+|---|---|
+| Technique | Random-size UDP datagrams, optional IP spoofing |
+| Requires | Root (for Scapy/spoofed mode) |
+| Primary Defence | Ingress rate limiting, BCP38 anti-spoofing, upstream scrubbing |
+
+---
+
+### 3. ICMP Ping Flood *(Layer 3)*
+
+Sends a storm of ICMP Echo Request (ping) packets with **spoofed source IPs** and **random payloads**, consuming the target's bandwidth and ICMP processing capacity.
+
+| Detail | Value |
+|---|---|
+| Technique | High-rate ICMP Echo Requests with spoofed IPs |
+| Requires | Scapy, root |
+| Primary Defence | ICMP rate limiting, perimeter firewall rules |
+
+---
+
+### 4. Amplification Attack *(Simulation Only)*
+
+**No real traffic is sent.** This module is a pure educational walk-through explaining how UDP reflection/amplification attacks (DNS, NTP, SSDP, Memcached) work and why they are so effective.
+
+| Protocol | Max Amplification Factor |
+|---|---|
+| DNS reflection | ~54× |
+| NTP monlist | ~556× |
+| SSDP | ~30× |
+| Memcached | ~51,200× |
+
+Primary defences covered: BCP38 ingress filtering, disabling open resolvers, RTBH routing.
+
+---
+
+### 5. HTTP GET Flood *(Layer 7)*
+
+Sends rapid HTTP GET requests with **randomised paths** and **rotating User-Agent strings** to bypass simple signature-based filters. Operates at the application layer, making it harder to distinguish from legitimate browser traffic at L3/L4.
+
+| Detail | Value |
+|---|---|
+| Technique | Randomised GET requests mimicking browser traffic |
+| Requires | Standard sockets only (no root needed) |
+| Primary Defence | WAF, CAPTCHA, JS challenge, rate limiting, Cloudflare Bot Fight Mode |
+
+---
+
+## Live Statistics
+
+During any active attack, the tool displays a live progress line:
+
+```
+Sent:   12,450   OK:  12,301   Err:   149   PPS:   415.3   Time:   30.0s
 ```
 
-### 3️⃣ Enter Attack Details  
-For the selected attack type, you'll be prompted to enter:
-- **Target IP**
-- **Target Port** (if applicable)
-- **Attack Duration (in seconds)**
+A full summary is printed after each run showing total packets sent, successes, errors, duration, and average packets per second.
 
-Example:
-```bash
-Enter your choice: 1
-Enter target IP: 192.168.1.10
-Enter target port: 80
-Enter attack duration (seconds): 30
+---
+
+## Signal Handling
+
+Press `Ctrl+C` at any time to **gracefully stop the current attack** and return to the menu. The tool will not exit — you can launch a new attack or choose to quit from the menu.
+
+---
+
+## Project Structure
+
+```
+kali_dada.py          # Main script — all modules in a single file
 ```
 
 ---
 
-## 🛠️ Troubleshooting
+## Ethical Use
 
-### Permission Denied (Linux)  
-If you get a `PermissionError`, run:
-```bash
-sudo chmod +x main.py
-```
+This tool was built to demonstrate real-world attack techniques in a way that helps defenders understand what they are protecting against. Always:
 
-### Script Execution Disabled (Windows)  
-If PowerShell prevents script execution, enable it by running:
-```powershell
-Set-ExecutionPolicy Unrestricted -Scope Process
-```
+- Use only on systems **you own** or have **written permission** to test
+- Operate in an **isolated lab environment**
+- Never target production systems, public infrastructure, or third-party services
 
 ---
 
-## ❗ Disclaimer  
-🚨 **This tool is strictly for educational and research purposes.** Unauthorized use may result in legal consequences. Ensure you have explicit permission to test the target systems.  
-🔗 **Author Website**: [sujallamichhane.com.np](https://sujallamichhane.com.np)
+## License
 
----
-
-💻 **Happy Hacking!**
-
----
-
+This project is for educational use only. All rights reserved by the author. Redistribution or use in a malicious context is strictly prohibited.
