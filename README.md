@@ -38,14 +38,14 @@ The author bears **zero responsibility** for any misuse.
 ### Step 1 — Clone or download the script
 
 ```bash
-git clone https://github.com/yourusername/kali-dada.git
+git clone https://github.com/sujallamichhane18/dos-attack.git
 cd kali-dada
 ```
 
 Or if you downloaded it manually:
 
 ```bash
-cd /path/to/kali_dada
+cd /home/dos-attack
 ```
 
 ---
@@ -89,7 +89,7 @@ pip install scapy
 Scapy requires raw socket access, so the script must be run as root. Use the **full path** to the venv Python binary so root uses the venv's packages:
 
 ```bash
-sudo venv/bin/python kali_dada.py
+sudo venv/bin/python main.py
 ```
 
 > **Why `venv/bin/python` and not just `sudo python3`?**  
@@ -101,7 +101,7 @@ sudo venv/bin/python kali_dada.py
 
 ```bash
 # 1. Enter the project directory
-cd /path/to/kali-dada
+cd /home/to/dos-attack
 
 # 2. Create the virtual environment
 python3 -m venv venv
@@ -113,7 +113,7 @@ source venv/bin/activate
 pip install scapy
 
 # 5. Run as root using the venv interpreter
-sudo venv/bin/python kali_dada.py
+sudo venv/bin/python main.py
 ```
 
 ---
